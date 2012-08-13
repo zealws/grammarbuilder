@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import skyql.builders.QueryCreator;
 import skyql.query.Query;
 
 public class ParserTest {
@@ -20,7 +19,8 @@ public class ParserTest {
 						"sElEcT * fRoM t;",
 						"select x,y,z from table_name order by x, y , z;",
 						"select x,y,z from table_name where x = y and y = z;",
-						"select x,y,z from table_name where x = y or y = z;"
+						"select x,y,z from table_name where x = y or y = z;",
+						"select x,y,z from table_name where x = 5 or y = z;"
 						);
 		final List<String> results =
 				Arrays.asList(
@@ -28,10 +28,12 @@ public class ParserTest {
 						"SELECT [*] FROM 't'",
 						"SELECT [x, y, z] FROM 'table_name' ORDER BY [x, y, z]",
 						"SELECT [x, y, z] FROM 'table_name' WHERE x = y AND y = z",
-						"SELECT [x, y, z] FROM 'table_name' WHERE x = y OR y = z"
+						"SELECT [x, y, z] FROM 'table_name' WHERE x = y OR y = z",
+						"SELECT [x, y, z] FROM 'table_name' WHERE x = 5 OR y = z"
 						);
 		for(int i = 0; i < queries.size(); i++) {
-			assertEquals(results.get(i),QueryCreator.read(queries.get(i),Query.class).toString());
+			System.out.println(queries.get(i));
+			assertEquals(results.get(i),Creator.read(queries.get(i),Query.class).toString());
 		}
 	}
 

@@ -2,8 +2,8 @@ package skyql.query;
 
 import skyql.main.Creator.Buildable;
 
-@Buildable(resolvers={SelectQuery.class},suffix=";")
-public abstract class Query {
+@Buildable(resolvers={QuotedString.class,ColumnName.class})
+public abstract class Value {
 	
 	@Override
 	public abstract String toString();

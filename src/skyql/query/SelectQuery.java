@@ -2,20 +2,33 @@ package skyql.query;
 
 import java.util.List;
 
+import skyql.main.Creator.Buildable;
+import skyql.main.Creator.Token;
+
+@Buildable(
+	prefix="select"
+)
 public class SelectQuery extends Query {
 	
-	private List<String> columns;
+	@Token(position=0)
+	private ColumnList columns;
+	
+	@Token(position=1,prefix="from")
+	private TableName tableName;
+	
+	@Token(position=2,optional=true,prefix="where")
 	private Expression expression;
-	private String tableName;
+	
+	@Token(position=3,optional=true,prefix={"order","by"},subtype=String.class)
 	private List<String> orderings;
 	
-	public SelectQuery(List<String> columnList, String tableName, Expression expression, List<String> orderings) {
-		if(columnList == null)
+	public SelectQuery(ColumnList columns, TableName tableName, Expression expression, List<String> orderings) {
+		if(columns == null)
 			throw new IllegalStateException("Column list cannot be null.");
 		if(tableName == null)
 			throw new IllegalStateException("Table name cannot be null.");
 		this.tableName = tableName;
-		this.columns = columnList;
+		this.columns = columns;
 		this.expression = expression;
 		this.orderings = orderings;
 	}

@@ -1,12 +1,21 @@
 package skyql.query;
 
+import skyql.main.Creator.Buildable;
+import skyql.main.Creator.Token;
+
+@Buildable
 public class ComparisonCondition extends Condition {
 	
-	private String column;
-	private String op;
-	private String value;
+	@Token(position=0)
+	private ColumnName column;
 	
-	public ComparisonCondition(String column, String op, String value) {
+	@Token(position=1)
+	private String op;
+	
+	@Token(position=2)
+	private Value value;
+	
+	public ComparisonCondition(ColumnName column, String op, Value value) {
 		this.column = column;
 		this.op = op;
 		this.value = value;

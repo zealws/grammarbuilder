@@ -1,4 +1,4 @@
-package skyql.builders;
+package skyql.main;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -6,9 +6,14 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import skyql.main.Util;
 
 public class CreatorStream {
+	
+	private enum Mode { Normal , Escaped , Keep };
+	
+	Mode mode = Mode.Normal;
+	
+	private char escapeChar;
 	
 	private Reader reader;
 	
@@ -35,28 +40,52 @@ public class CreatorStream {
 		StringBuilder token = new StringBuilder();
 		while(reader.ready() || parsedTokens.size() == 0) {
 			int p = read();
-			char c = (char) p;
-			
 			if(p == -1) {
 				break;
 			}
+			char c = (char) p;
 			
-			if(Character.isWhitespace(c) && token.length() > 0)
-				break;
-			
-			if(isSpecialCharacter(c)) {
-				if(token.length() != 0 ) {
+			if(mode == Mode.Escaped) {
+				if(c == escapeChar) {
+					mode = Mode.Keep;
 					putBack(p);
+					break;
 				}
 				else
-					token.append(String.valueOf(c));
-				break;
+					token.append(c);
+			} else {
+				if(token.length() == 0) {
+					if(isSpecialCharacter(c)) {
+						token.append(c);
+						break;
+					}
+					else if(isModeCharacter(c) && mode == Mode.Keep) {
+						token.append(c);
+						mode = Mode.Normal;
+						break;
+					} else if(isModeCharacter(c) && mode == Mode.Normal) {
+						token.append(c);
+						mode = Mode.Escaped;
+						escapeChar = c;
+						break;
+					}
+					else if(!Character.isWhitespace(c))
+						token.append(c);
+				} else {
+					if(Character.isWhitespace(c))
+						break;
+					if(isSpecialCharacter(c) || isModeCharacter(c)) {
+						putBack(p);
+						break;
+					}
+					else if(!Character.isWhitespace(c))
+						token.append(c);
+				}
 			}
-			if(!Character.isWhitespace(c))
-				token.append(c);
 		}
 		if(token.length() == 0)
 			return null;
+		//System.out.println(token + "\t:\t" + mode);
 		return token.toString();
 	}
 	
@@ -66,7 +95,6 @@ public class CreatorStream {
 			if(token != null)
 				parsedTokens.offer(token);
 			else {
-				//System.out.println(allTokens());
 				return;
 			}
 		}
@@ -80,6 +108,18 @@ public class CreatorStream {
 	public String peekToken() throws IOException {
 		readTokens();
 		return parsedTokens.peek();
+	}
+	
+	public void putBackToken(String token) {
+		parsedTokens.offer(token);
+	}
+	
+	public static boolean isModeCharacter(Character c) {
+		final List<Character> modeChars
+			= Arrays.asList(
+					'\'',
+					'"');
+		return modeChars.contains(c);
 	}
 	
 	public static boolean isSpecialCharacter(Character c) {
@@ -114,11 +154,7 @@ public class CreatorStream {
 
 	public void assertEqualsAndDiscard(String token, boolean ignoreCase) throws IOException {
 		String next = nextToken();
-		boolean fine;
-		if(ignoreCase)
-			fine = token.equalsIgnoreCase(next);
-		else
-			fine = token.equals(next);
+		boolean fine = compare(token,next,ignoreCase);
 		if(fine)
 			return;
 		else
@@ -129,11 +165,7 @@ public class CreatorStream {
 		String next = peekToken();
 		if(next == null)
 			return false;
-		boolean eq;
-		if(ignoreCase)
-			eq = token.equalsIgnoreCase(next);
-		else
-			eq = token.equals(next);
+		boolean eq = compare(token,next, ignoreCase);
 		if(eq)
 			nextToken();
 		return eq;
@@ -151,6 +183,45 @@ public class CreatorStream {
 		if(next == null || !list.contains(next))
 			throw new RuntimeException(next+" is not contained in "+Util.join(list,","));
 		return next;
+	}
+	
+	private static boolean compare(String a, String b, boolean ignoreCase) {
+		if(ignoreCase)
+			return a.equalsIgnoreCase(b);
+		else
+			return a.equals(b);
+	}
+	
+	public boolean compareAndDiscardIfEq(String[] tokens, boolean ignoreCase) throws IOException {
+		if(!compareAndPassIfEq(tokens, ignoreCase))
+			return false;
+		for(int i = 0; i < tokens.length; i++) {
+			assertEqualsAndDiscard(tokens[i], ignoreCase);
+		}
+		return true;
+	}
+	
+	public boolean compareAndPassIfEq(String[] tokens, boolean ignoreCase) throws IOException {
+		readTokens();
+		try {
+			for(int i = 0; i < tokens.length; i++) {
+				if(!compare(parsedTokens.get(i),tokens[i],ignoreCase))
+					return false;
+			}
+		} catch (IndexOutOfBoundsException e) {
+			return false;
+		}
+		return true;
+	}
+
+	public void assertEqualsAndDiscard(String[] prefix, boolean ignoreCase) throws IOException {
+		for(String pre : prefix)
+			assertEqualsAndDiscard(pre, ignoreCase);
+	}
+
+	public boolean compareMatchesAndPass(String matches) throws IOException {
+		String next = peekToken();
+		return next.matches(matches);
 	}
 
 }
