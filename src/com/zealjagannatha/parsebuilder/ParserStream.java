@@ -1,4 +1,4 @@
-package skyql.main;
+package com.zealjagannatha.parsebuilder;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class CreatorStream {
+public class ParserStream {
 	
 	private enum Mode { Normal , Escaped , Keep };
 	
@@ -19,7 +19,7 @@ public class CreatorStream {
 	
 	private LinkedList<Integer> putBacks = new LinkedList<Integer>();
 	
-	public CreatorStream(Reader reader) {
+	public ParserStream(Reader reader) {
 		this.reader = reader;
 	}
 	
@@ -158,7 +158,7 @@ public class CreatorStream {
 		if(fine)
 			return;
 		else
-			throw new RuntimeException(String.format("expected token '%s' but got %s instead",token,(next==null?"nothing":"'"+next+"'")));
+			throw new ParseException(String.format("Expected token '%s' but got %s instead",token,(next==null?"end of stream":"'"+next+"'")));
 	}
 
 	public boolean compareAndDiscardIfEq(String token, boolean ignoreCase) throws IOException {

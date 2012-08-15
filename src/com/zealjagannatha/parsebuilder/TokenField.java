@@ -1,9 +1,9 @@
-package skyql.main;
+package com.zealjagannatha.parsebuilder;
 
-import static skyql.main.Parser.nt;
-import static skyql.main.Parser.sc;
-import static skyql.main.Parser.lt;
-import static skyql.main.Parser.t;
+import static com.zealjagannatha.parsebuilder.Parser.lt;
+import static com.zealjagannatha.parsebuilder.Parser.nt;
+import static com.zealjagannatha.parsebuilder.Parser.sc;
+import static com.zealjagannatha.parsebuilder.Parser.t;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -61,7 +61,7 @@ public class TokenField implements AnnotatedDeclaration {
 	}
 
 	@Override
-	public Object read(CreatorStream stream) throws IOException {
+	public Object read(ParserStream stream) throws IOException {
 		boolean use = true;
 		Object result = null;
 		if(token.optional())
@@ -130,7 +130,7 @@ public class TokenField implements AnnotatedDeclaration {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private static <K> List<K> readList(String padding, CreatorStream stream, Class<K> clazz) throws IOException {
+	private static <K> List<K> readList(String padding, ParserStream stream, Class<K> clazz) throws IOException {
 		List<K> results = new LinkedList<K>();
 		boolean cont = true;
 		while(cont) {

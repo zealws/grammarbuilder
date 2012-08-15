@@ -1,7 +1,7 @@
 package skyql.query;
 
-import skyql.main.BuildableClass.Buildable;
-import skyql.main.TokenField.Token;
+import com.zealjagannatha.parsebuilder.BuildableClass.Buildable;
+import com.zealjagannatha.parsebuilder.TokenField.Token;
 
 @Buildable(prefix="'",suffix="'")
 public class QuotedString extends Value {

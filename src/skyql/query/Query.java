@@ -1,6 +1,6 @@
 package skyql.query;
 
-import skyql.main.BuildableClass.Buildable;
+import com.zealjagannatha.parsebuilder.BuildableClass.Buildable;
 
 @Buildable(resolvers={SelectQuery.class},suffix=";")
 public abstract class Query {

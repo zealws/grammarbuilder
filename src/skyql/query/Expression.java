@@ -2,9 +2,10 @@ package skyql.query;
 
 import java.util.List;
 
-import skyql.main.BuildableClass.Buildable;
-import skyql.main.TokenField.Token;
-import skyql.main.Util;
+import com.zealjagannatha.parsebuilder.Util;
+import com.zealjagannatha.parsebuilder.BuildableClass.Buildable;
+import com.zealjagannatha.parsebuilder.TokenField.Token;
+
 
 @Buildable
 public class Expression {

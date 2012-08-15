@@ -1,9 +1,9 @@
-package skyql.main;
+package com.zealjagannatha.parsebuilder;
 
-import static skyql.main.Parser.nt;
-import static skyql.main.Parser.sc;
-import static skyql.main.Parser.lt;
-import static skyql.main.Parser.lhs;
+import static com.zealjagannatha.parsebuilder.Parser.lhs;
+import static com.zealjagannatha.parsebuilder.Parser.lt;
+import static com.zealjagannatha.parsebuilder.Parser.nt;
+import static com.zealjagannatha.parsebuilder.Parser.sc;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -18,7 +18,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
-import skyql.main.TokenField.Token;
+import com.zealjagannatha.parsebuilder.TokenField.Token;
+
 
 public class BuildableClass implements AnnotatedDeclaration {
 	
@@ -38,7 +39,7 @@ public class BuildableClass implements AnnotatedDeclaration {
 		this.clazz = clazz;
 		Annotation preBuildable = clazz.getAnnotation(Buildable.class);
 		if(!(preBuildable instanceof Buildable))
-			throw new RuntimeException("Attempt to create BuildableClass from non-buildable object: "+clazz.getSimpleName());
+			throw new ParseException("Attempt to create BuildableClass from non-buildable object: "+clazz.getSimpleName());
 		build = (BuildableClass.Buildable) preBuildable;
 	}
 
@@ -71,7 +72,7 @@ public class BuildableClass implements AnnotatedDeclaration {
 	}
 
 	@Override
-	public Object read(CreatorStream stream) throws IOException {
+	public Object read(ParserStream stream) throws IOException {
 		Object result;
 		stream.assertEqualsAndDiscard(build.prefix(), build.ignoreCase());
 		
@@ -86,10 +87,8 @@ public class BuildableClass implements AnnotatedDeclaration {
 			Constructor<?> ctor;
 			try {
 				ctor = clazz.getConstructor(getFieldTypes(fields));
-			} catch (SecurityException e) {
-				throw new RuntimeException(String.format("Constructor %s(%s) must be public.",getName(),Util.join(fields,",")),e);
-			} catch (NoSuchMethodException e) {
-				throw new RuntimeException(String.format("Constructor %s(%s) must exist.",getName(),Util.join(getFieldTypes(fields),",")),e);
+			} catch (SecurityException | NoSuchMethodException e) {
+				throw new ParseException(String.format("Constructor %s(%s) must exist.",getName(),Util.join(fields,",")),e);
 			}
 			try {
 				result = ctor.newInstance(params);
@@ -116,7 +115,7 @@ public class BuildableClass implements AnnotatedDeclaration {
 		return types;
 	}
 
-	private Object[] readFields(CreatorStream stream, List<TokenField> fields) throws IOException {
+	private Object[] readFields(ParserStream stream, List<TokenField> fields) throws IOException {
 		List<Object> results = new ArrayList<Object>(fields.size());
 		for(TokenField field : fields) {
 			results.add(field.read(stream));
@@ -163,7 +162,7 @@ public class BuildableClass implements AnnotatedDeclaration {
 		return build.suffix();
 	}
 
-	public BuildableClass findResolver(CreatorStream stream, List<BuildableClass> resolvers) throws IOException {
+	public BuildableClass findResolver(ParserStream stream, List<BuildableClass> resolvers) throws IOException {
 		String next = stream.peekToken();
 		BuildableClass match = null;
 		BuildableClass def = null;

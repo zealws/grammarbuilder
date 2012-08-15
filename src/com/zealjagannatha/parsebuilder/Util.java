@@ -1,4 +1,4 @@
-package skyql.main;
+package com.zealjagannatha.parsebuilder;
 
 import java.util.List;
 

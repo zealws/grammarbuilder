@@ -1,5 +1,6 @@
-package skyql.main;
+package com.zealjagannatha.parsebuilder;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.LinkedList;
 
@@ -56,16 +57,16 @@ public abstract class Parser<T> {
 		public String specialEnd() { return "</span>"; }
 	}
 	
-	private static final StyleScheme scheme = new HtmlScheme(); 
+	private static final StyleScheme scheme = new StyleScheme(); 
 	
 	@SuppressWarnings("unchecked")
-	public static <K> K read(CreatorStream stream, Class<K> toRead) throws Exception {
+	public static <K> K parse(ParserStream stream, Class<K> toRead) throws IOException {
 		BuildableClass clazz = new BuildableClass(toRead);
 		return (K) clazz.read(stream);
 	}
 	
-	public static <K> K read(String toParse, Class<K> clazz) throws Exception {
-		return read(new CreatorStream(new StringReader(toParse)), clazz);
+	public static <K> K parse(String toParse, Class<K> clazz) throws IOException {
+		return parse(new ParserStream(new StringReader(toParse)), clazz);
 	}
 	
 	public static <K> String generateGrammar(Class<K> toRead) {
