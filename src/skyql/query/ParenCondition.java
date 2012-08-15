@@ -1,7 +1,7 @@
 package skyql.query;
 
-import skyql.main.Creator.Buildable;
-import skyql.main.Creator.Token;
+import skyql.main.BuildableClass.Buildable;
+import skyql.main.TokenField.Token;
 
 @Buildable(prefix="(",suffix=")")
 public class ParenCondition extends Condition {

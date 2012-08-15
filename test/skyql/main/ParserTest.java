@@ -33,7 +33,7 @@ public class ParserTest {
 						);
 		for(int i = 0; i < queries.size(); i++) {
 			System.out.println(queries.get(i));
-			assertEquals(results.get(i),Creator.read(queries.get(i),Query.class).toString());
+			assertEquals(results.get(i),Parser.read(queries.get(i),Query.class).toString());
 		}
 	}
 

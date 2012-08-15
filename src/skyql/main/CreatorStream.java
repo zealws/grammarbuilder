@@ -158,7 +158,7 @@ public class CreatorStream {
 		if(fine)
 			return;
 		else
-			throw new RuntimeException("expected token '"+token+"' but got '"+next+"' instead");
+			throw new RuntimeException(String.format("expected token '%s' but got %s instead",token,(next==null?"nothing":"'"+next+"'")));
 	}
 
 	public boolean compareAndDiscardIfEq(String token, boolean ignoreCase) throws IOException {

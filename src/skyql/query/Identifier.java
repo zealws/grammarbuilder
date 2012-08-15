@@ -1,12 +1,12 @@
 package skyql.query;
 
-import skyql.main.Creator.Buildable;
-import skyql.main.Creator.Token;
+import skyql.main.BuildableClass.Buildable;
+import skyql.main.TokenField.Token;
 
-@Buildable(matches="\\w+")
+@Buildable
 public class Identifier {
 	
-	@Token
+	@Token(matches="\\w+")
 	private String name;
 	
 	public Identifier(String name) {

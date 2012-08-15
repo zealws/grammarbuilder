@@ -2,12 +2,10 @@ package skyql.query;
 
 import java.util.List;
 
-import skyql.main.Creator.Buildable;
-import skyql.main.Creator.Token;
+import skyql.main.BuildableClass.Buildable;
+import skyql.main.TokenField.Token;
 
-@Buildable(
-	prefix="select"
-)
+@Buildable(prefix="select")
 public class SelectQuery extends Query {
 	
 	@Token(position=0)

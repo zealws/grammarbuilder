@@ -2,9 +2,9 @@ package skyql.query;
 
 import java.util.List;
 
+import skyql.main.BuildableClass.Buildable;
+import skyql.main.TokenField.Token;
 import skyql.main.Util;
-import skyql.main.Creator.Buildable;
-import skyql.main.Creator.Token;
 
 @Buildable
 public class AndCondition {
