@@ -1,20 +1,62 @@
 package skyql.main;
 
 import java.io.StringReader;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Vector;
-
-import skyql.main.TokenField.Token;
+import java.util.LinkedList;
 
 
 public abstract class Parser<T> {
 	
-	private static final String tab = "    ";
-	private static Hashtable<String,String> grammars = new Hashtable<String,String>();
+	private static class StyleScheme {
+		public String tab() { return "    "; }
+		public String nl() { return "\n"; }
+		public String lhsTag() { return ""; }
+		public String lhsEnd() { return ""; }
+		public String topGrammar() { return ""; }
+		public String bottomGrammar() { return ""; }
+		public String nonTerminalTag() { return ""; }
+		public String nonTerminalEnd() { return ""; }
+		public String terminalTag() { return ""; }
+		public String terminalEnd() { return ""; }
+		public String literalTag() { return "\""; }
+		public String literalEnd() { return "\""; }
+		public String specialTag() { return ""; }
+		public String specialEnd() { return ""; }
+	}
+	
+	@SuppressWarnings("unused")
+	private static class HtmlScheme extends StyleScheme {
+		private static final String lhsColor = "red";
+		private static final String nonTerminalColor = "orange";
+		private static final String terminalColor = "blue";
+		private static final String literalColor = "green";
+		private static final String specialColor = "black";
+		@Override
+		public String tab() { return "&nbsp;&nbsp;&nbsp;&nbsp;"; }
+		@Override
+		public String nl() { return "<br/>"; }
+		@Override
+		public String lhsTag() { return "<span style='color:"+lhsColor+";'>"; }
+		@Override
+		public String lhsEnd() { return "</span>"; }
+		@Override
+		public String nonTerminalTag() { return "<span style='color:"+nonTerminalColor+";'>"; }
+		@Override
+		public String nonTerminalEnd() { return "</span>"; }
+		@Override
+		public String terminalTag() { return "<span style='color:"+terminalColor+";'>"; }
+		@Override
+		public String terminalEnd() { return "</span>"; }
+		@Override
+		public String literalTag() { return "<i><span style='color:"+literalColor+";'>"; }
+		@Override
+		public String literalEnd() { return "</span></i>"; }
+		@Override
+		public String specialTag() { return "<span style='color:"+specialColor+";'>"; }
+		@Override
+		public String specialEnd() { return "</span>"; }
+	}
+	
+	private static final StyleScheme scheme = new HtmlScheme(); 
 	
 	@SuppressWarnings("unchecked")
 	public static <K> K read(CreatorStream stream, Class<K> toRead) throws Exception {
@@ -26,139 +68,56 @@ public abstract class Parser<T> {
 		return read(new CreatorStream(new StringReader(toParse)), clazz);
 	}
 	
-	public static <K> String generateGrammar(Class<K> clazz) {
-		StringBuilder result = new StringBuilder();
-		HashSet<Class<?>> allClasses = new HashSet<Class<?>>();
-		allClasses.add(clazz);
-		int oldSize = 0;
-		while(oldSize != allClasses.size()) {
-			oldSize = allClasses.size();
-			for(int i = 0; i < oldSize; i++) {
-				Class<?> c = (Class<?>) allClasses.toArray()[i];
-				generateRawGrammar(c,allClasses);
+	public static <K> String generateGrammar(Class<K> toRead) {
+		BuildableClass clazz = new BuildableClass(toRead);
+		LinkedList<AnnotatedDeclaration> uniqueNonterminals = new LinkedList<AnnotatedDeclaration>();
+		LinkedList<AnnotatedDeclaration> toGenerate = new LinkedList<AnnotatedDeclaration>();
+		toGenerate.add(clazz);
+		while(!toGenerate.isEmpty()) {
+			AnnotatedDeclaration decl = toGenerate.poll();
+			uniqueNonterminals.add(decl);
+			for(AnnotatedDeclaration sub : decl.getSubdeclarations()) {
+				if(!uniqueNonterminals.contains(sub) && !toGenerate.contains(sub)) {
+					toGenerate.add(sub);
+				}
 			}
 		}
-		for(Class<?> c : allClasses) {
-			result.append(generateRawGrammar(c,allClasses));
+		StringBuilder result = new StringBuilder();
+		result.append(scheme.topGrammar());
+		for(AnnotatedDeclaration decl : uniqueNonterminals) {
+			result.append(decl.generateGrammar());
+			result.append("\n");
 		}
+		result.append(scheme.bottomGrammar());
 		return result.toString();
+	}
+	
+	static String nt(String val) {
+		return scheme.nonTerminalTag() + val + scheme.nonTerminalEnd();
+	}
+	
+	static String t(String val) {
+		return scheme.terminalTag() + val + scheme.terminalEnd();
+	}
+	
+	static String sc(String val) {
+		return scheme.specialTag() + val + scheme.specialEnd();
+	}
+	
+	static String lt(String val) {
+		return scheme.literalTag() + val + scheme.literalEnd();
 	}
 
-	private static <K> String generateRawGrammar(Class<K> clazz, HashSet<Class<?>> toGenerate) {
-		if(grammars.get(clazz.getSimpleName()) != null)
-			return grammars.get(clazz.getSimpleName());
-		StringBuilder result = new StringBuilder();
-		Annotation preBuildable = clazz.getAnnotation(BuildableClass.Buildable.class);
-		if(!(preBuildable instanceof BuildableClass.Buildable))
-			return "";
-		BuildableClass.Buildable build = (BuildableClass.Buildable) preBuildable;
-		result.append(clazz.getSimpleName());
-		result.append(" :=\n");
-		if(build.resolvers().length != 0) {
-			boolean first = true;
-			for(Class<?> resolver : build.resolvers()) {
-				if(!first) {
-					result.append("|\n");
-				}
-				first = false;
-				result.append(tab);
-				for(String pre : build.prefix()) {
-					result.append("\"");
-					result.append(pre);
-					result.append("\"");
-					result.append(" ");
-				}
-				toGenerate.add(resolver);
-				result.append(resolver.getSimpleName());
-				result.append(" ");
-				for(String pre : build.suffix()) {
-					result.append("\"");
-					result.append(pre);
-					result.append("\"");
-					result.append(" ");
-				}
-			}
-			result.append("\n");
-		} else {
-			result.append(tab);
-			for(String pre : build.prefix()) {
-				result.append("\"");
-				result.append(pre);
-				result.append("\"");
-				result.append(" ");
-			}
-			Field[] fields = getProperFields(clazz);
-			for(Field field : fields) {
-				Token token = field.getAnnotation(Token.class);
-				if(token.subtype() == Object.class)
-					toGenerate.add(field.getType());
-				else
-					toGenerate.add(token.subtype());
-				result.append(generateGrammar(field,toGenerate));
-				result.append(" ");
-			}
-			for(String pre : build.suffix()) {
-				result.append("\"");
-				result.append(pre);
-				result.append("\"");
-				result.append(" ");
-			}
-		}
-		result.append("\n\n");
-		return result.toString();
+	static String nl() {
+		return scheme.nl();
 	}
 	
-	private static Object generateGrammar(Field field, HashSet<Class<?>> toGenerate) {
-		Token token = field.getAnnotation(Token.class);
-		StringBuilder result = new StringBuilder();
-		if(token.optional())
-			result.append("[ ");
-		for(String pre : token.prefix()) {
-			result.append("\"");
-			result.append(pre);
-			result.append("\"");
-			result.append(" ");
-		}
-		if(token.subtype() != Object.class) {
-			result.append("List<");
-			result.append(token.subtype().getSimpleName());
-			result.append(">");
-			toGenerate.add(token.subtype());
-		}
-		else {
-			result.append(field.getType().getSimpleName());
-			toGenerate.add(field.getType());
-		}
-		for(String suf : token.suffix()) {
-			result.append("\"");
-			result.append(suf);
-			result.append("\"");
-			result.append(" ");
-		}
-		if(token.optional())
-			result.append(" ]");
-		return result.toString();
+	static String tab() {
+		return scheme.tab();
 	}
 	
-	static <K> Field[] getProperFields(Class<K> toRead) {
-		List<Field> prelim = new Vector<Field>();
-		for(Field field : toRead.getDeclaredFields()) {
-			Annotation an = field.getAnnotation(Token.class);
-			if(an instanceof Token) {
-				prelim.add(field);
-			}
-		}
-		
-		Field[] results = new Field[prelim.size()]; 
-		for(int i = 0; i < prelim.size(); i++) {
-			for(Field field : prelim) {
-				Token an = field.getAnnotation(Token.class);
-				if(an.position() == i)
-					results[i] = field;
-			}
-		}
-		return results;
+	static String lhs(String val) {
+		return scheme.lhsTag() + val + scheme.lhsEnd();
 	}
-	
 	
 }

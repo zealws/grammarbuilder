@@ -1,5 +1,10 @@
 package skyql.main;
 
+import static skyql.main.Parser.nt;
+import static skyql.main.Parser.sc;
+import static skyql.main.Parser.lt;
+import static skyql.main.Parser.lhs;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -67,11 +72,10 @@ public class BuildableClass implements AnnotatedDeclaration {
 
 	@Override
 	public Object read(CreatorStream stream) throws IOException {
-		//System.out.println("Reading "+getName());
 		Object result;
 		stream.assertEqualsAndDiscard(build.prefix(), build.ignoreCase());
 		
-		if(build.resolvers().length != 0) {
+		if(resolverClass()) {
 			List<BuildableClass> resolvers = getResolvers();
 			BuildableClass match = findResolver(stream, resolvers);
 			result = match.read(stream);
@@ -122,9 +126,43 @@ public class BuildableClass implements AnnotatedDeclaration {
 
 	@Override
 	public String generateGrammar() {
-		return "";
+		StringBuilder grammar = new StringBuilder();
+		grammar.append(lhs(getName()));
+		grammar.append(" "+sc(":=")+Parser.nl());
+		if(resolverClass()) {
+			boolean first = true;
+			for(BuildableClass resolver : getResolvers()) {
+				if(!first) {
+					grammar.append(sc("|")+Parser.nl());
+				}
+				first = false;
+				grammar.append(Parser.tab());
+				for(String pre : prefix())
+					grammar.append(lt(pre)+" ");
+				grammar.append(nt(resolver.getName()));
+				grammar.append(" ");
+				for(String suf : suffix())
+					grammar.append(lt(suf)+" ");
+			}
+			grammar.append(Parser.nl());
+		} else {
+			grammar.append(Parser.tab());
+			for(String pre : prefix())
+				grammar.append(lt(pre)+" ");
+			for(TokenField field : getAnnotatedFields()) {
+				grammar.append(field.generateGrammar());
+			}
+			for(String suf : suffix())
+				grammar.append(lt(suf)+" ");
+			grammar.append(Parser.nl());
+		}
+		return grammar.toString();
 	}
 	
+	private String[] suffix() {
+		return build.suffix();
+	}
+
 	public BuildableClass findResolver(CreatorStream stream, List<BuildableClass> resolvers) throws IOException {
 		String next = stream.peekToken();
 		BuildableClass match = null;
@@ -153,6 +191,10 @@ public class BuildableClass implements AnnotatedDeclaration {
 		return match;
 	}
 	
+	public boolean resolverClass() {
+		return build.resolvers().length != 0;
+	}
+	
 	public List<BuildableClass> getResolvers() {
 		Class<?>[] resolvers = build.resolvers();
 		List<BuildableClass> buildables = new LinkedList<BuildableClass>();
@@ -169,8 +211,30 @@ public class BuildableClass implements AnnotatedDeclaration {
 		return clazz.getSimpleName();
 	}
 	
+	@Override
 	public String toString() {
 		return getName();
+	}
+
+	@Override
+	public List<AnnotatedDeclaration> getSubdeclarations() {
+		List<AnnotatedDeclaration> results = new LinkedList<AnnotatedDeclaration>();
+		if(resolverClass()) {
+			for(BuildableClass c : getResolvers())
+				results.add(c);
+		} else {
+			for(TokenField f : getAnnotatedFields())
+				results.addAll(f.getSubdeclarations());
+		}
+		return results;
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(!(other instanceof BuildableClass))
+			return false;
+		BuildableClass o = (BuildableClass) other;
+		return clazz.equals(o.clazz);
 	}
 
 }
