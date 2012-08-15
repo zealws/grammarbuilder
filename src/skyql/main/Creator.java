@@ -110,7 +110,6 @@ public abstract class Creator<T> {
 	
 	private static Hashtable<String,String> grammars = new Hashtable<String,String>();
 	
-	@SuppressWarnings("unchecked")
 	public static <K> String generateGrammar(Class<K> clazz) {
 		StringBuilder result = new StringBuilder();
 		HashSet<Class<?>> allClasses = new HashSet<Class<?>>();
