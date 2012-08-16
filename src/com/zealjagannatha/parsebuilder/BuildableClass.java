@@ -1,11 +1,5 @@
 package com.zealjagannatha.parsebuilder;
 
-import static com.zealjagannatha.parsebuilder.Parser.lhs;
-import static com.zealjagannatha.parsebuilder.Parser.lt;
-import static com.zealjagannatha.parsebuilder.Parser.nt;
-import static com.zealjagannatha.parsebuilder.Parser.sc;
-import static com.zealjagannatha.parsebuilder.Parser.productionSym;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -19,9 +13,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
-import com.zealjagannatha.parsebuilder.Grammar.ProductionRhs;
 import com.zealjagannatha.parsebuilder.ParserLookaheadStream.LookaheadEndOfStream;
 import com.zealjagannatha.parsebuilder.TokenField.Token;
+import com.zealjagannatha.parsebuilder.grammar.Literal;
+import com.zealjagannatha.parsebuilder.grammar.NonTerminal;
+import com.zealjagannatha.parsebuilder.grammar.ProductionRhs;
+import com.zealjagannatha.parsebuilder.grammar.RhsValue;
 
 
 public class BuildableClass {
@@ -125,40 +122,6 @@ public class BuildableClass {
 			results.add(field.read(stream));
 		}
 		return results.toArray();
-	}
-
-	public String generateGrammar() {
-		StringBuilder grammar = new StringBuilder();
-		grammar.append(lhs(getName()));
-		grammar.append(" "+productionSym()+Parser.nl());
-		if(resolverClass()) {
-			boolean first = true;
-			for(BuildableClass resolver : getResolvers()) {
-				if(!first) {
-					grammar.append(sc("|")+Parser.nl());
-				}
-				first = false;
-				grammar.append(Parser.tab());
-				for(String pre : prefix())
-					grammar.append(lt(pre)+" ");
-				grammar.append(nt(resolver.getName()));
-				grammar.append(" ");
-				for(String suf : suffix())
-					grammar.append(lt(suf)+" ");
-			}
-			grammar.append(Parser.nl());
-		} else {
-			grammar.append(Parser.tab());
-			for(String pre : prefix())
-				grammar.append(lt(pre)+" ");
-			for(TokenField field : getAnnotatedFields()) {
-				grammar.append(field.generateGrammar());
-			}
-			for(String suf : suffix())
-				grammar.append(lt(suf)+" ");
-			grammar.append(Parser.nl());
-		}
-		return grammar.toString();
 	}
 	
 	private String[] suffix() {
@@ -298,14 +261,23 @@ public class BuildableClass {
 		List<ProductionRhs> results = new LinkedList<ProductionRhs>();
 		if(resolverClass()) {
 			for(BuildableClass r : getResolvers()) {
-				results.add(new ProductionRhs(r.getName()));
+				LinkedList<RhsValue> values = new LinkedList<RhsValue>();
+				for(String pre : prefix())
+					values.add(new Literal(pre));
+				values.add(new NonTerminal(r.getName()));
+				for(String suf : suffix())
+					values.add(new Literal(suf));
+				results.add(new ProductionRhs(values));
 			}
 		} else {
-			List<String> symbols = new LinkedList<String>();
-			for(TokenField f : getAnnotatedFields()) {
-				symbols.add(f.getName());
-			}
-			results.add(new ProductionRhs(symbols));
+			List<RhsValue> values = new LinkedList<RhsValue>();
+			for(String pre : prefix())
+				values.add(new Literal(pre));
+			for(TokenField f : getAnnotatedFields())
+				values.addAll(f.getRhsValues());
+			for(String suf : suffix())
+				values.add(new Literal(suf));
+			results.add(new ProductionRhs(values));
 		}
 		return results;
 	}

@@ -1,10 +1,5 @@
 package com.zealjagannatha.parsebuilder;
 
-import static com.zealjagannatha.parsebuilder.Parser.lt;
-import static com.zealjagannatha.parsebuilder.Parser.nt;
-import static com.zealjagannatha.parsebuilder.Parser.sc;
-import static com.zealjagannatha.parsebuilder.Parser.t;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -12,10 +7,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.zealjagannatha.parsebuilder.ParserLookaheadStream.LookaheadEndOfStream;
+import com.zealjagannatha.parsebuilder.grammar.ListSymbol;
+import com.zealjagannatha.parsebuilder.grammar.Literal;
+import com.zealjagannatha.parsebuilder.grammar.NonTerminal;
+import com.zealjagannatha.parsebuilder.grammar.OptionalRhsValue;
+import com.zealjagannatha.parsebuilder.grammar.RhsValue;
+import com.zealjagannatha.parsebuilder.grammar.Symbol;
 
 public class TokenField {
 	
@@ -81,43 +83,6 @@ public class TokenField {
 		}
 		else
 			return null;
-	}
-
-	public String generateGrammar() {
-		StringBuilder grammar = new StringBuilder();
-		if(token.optional()) {
-			grammar.append(sc("[")+" ");
-		}
-		for(String pre : token.prefix())
-			grammar.append(lt(pre)+" ");
-		basicString(grammar);
-		for(String suf : token.suffix())
-			grammar.append(lt(suf)+" ");
-		if(token.optional()) {
-			grammar.append(" "+sc("]")+" ");
-		}
-		return grammar.toString();
-	}
-
-	private void basicString(StringBuilder grammar) {
-		if(getType().isAssignableFrom(List.class)){
-			grammar.append("List<");
-			if(getListSubtype() != String.class)
-				grammar.append(nt(getListSubtype().getSimpleName()));
-			else
-				grammar.append(t("String"));
-			grammar.append(",");
-			grammar.append(lt(token.padding()));
-			grammar.append("> ");
-		} else if(getType() == String.class) {
-			if(token.matches().equals("")) {
-				grammar.append(t("String "));
-			} else
-				grammar.append(t("String(")+lt(token.matches())+t(")"));
-				
-		}
-		else
-			grammar.append(nt(getType().getSimpleName())+" ");
 	}
 	
 	public String getName() {
@@ -206,6 +171,34 @@ public class TokenField {
 			cont = stream.compareAndDiscardIfEq(padding, false);
 		}
 		return;
+	}
+
+	public List<RhsValue> getRhsValues() {
+		if(token.optional()) {
+			List<Symbol> values = new LinkedList<Symbol>();
+			for(String pre : token.prefix())
+				values.add(new Literal(pre));
+			if(isList()){
+				values.add(new ListSymbol(new NonTerminal(getListSubtype().getSimpleName()),new Literal(token.padding())));
+			} else {
+				values.add(new NonTerminal(getType().getSimpleName()));
+			}
+			for(String suf : token.suffix())
+				values.add(new Literal(suf));
+			return Arrays.asList((RhsValue) new OptionalRhsValue(values));
+		} else {
+			List<RhsValue> values = new LinkedList<RhsValue>();
+			for(String pre : token.prefix())
+				values.add(new Literal(pre));
+			if(isList()){
+				values.add(new ListSymbol(new NonTerminal(getListSubtype().getSimpleName()),new Literal(token.padding())));
+			} else {
+				values.add(new NonTerminal(getType().getSimpleName()));
+			}
+			for(String suf : token.suffix())
+				values.add(new Literal(suf));
+			return values;
+		}
 	}
 
 }

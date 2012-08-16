@@ -20,6 +20,7 @@ public class ParserLookaheadStream extends ParserStream {
 		this.nextToken = nextToken;
 	}
 
+	@Override
 	public ParserLookaheadStream clone() {
 		try {
 			return new ParserLookaheadStream(Util.join(allTokens()," "),nextToken);
@@ -38,6 +39,7 @@ public class ParserLookaheadStream extends ParserStream {
 		return nextToken;
 	}
 	
+	@Override
 	public void assertEqualsAndDiscard(String token, boolean ignoreCase) throws IOException {
 		String next = nextToken();
 		boolean fine = compare(token,next,ignoreCase);
@@ -53,6 +55,7 @@ public class ParserLookaheadStream extends ParserStream {
 		}
 	}
 
+	@Override
 	public String assertMatchesAndReturn(String regex) throws IOException {
 		String next = nextToken();
 		if(next == null) {
@@ -64,6 +67,7 @@ public class ParserLookaheadStream extends ParserStream {
 		return next;
 	}
 
+	@Override
 	public String assertContainsAndReturn(List<String> list) throws IOException {
 		String next = nextToken();
 		if(next == null) {
@@ -76,6 +80,7 @@ public class ParserLookaheadStream extends ParserStream {
 		return next;
 	}
 
+	@Override
 	public void assertEqualsAndDiscard(String[] prefix, boolean ignoreCase) throws IOException {
 		for(String pre : prefix)
 			assertEqualsAndDiscard(pre, ignoreCase);
