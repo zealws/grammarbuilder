@@ -1,5 +1,7 @@
 package skyql.query;
 
+
+
 import com.zealjagannatha.parsebuilder.BuildableClass.Buildable;
 
 @Buildable(resolvers={SelectQuery.class},suffix=";")

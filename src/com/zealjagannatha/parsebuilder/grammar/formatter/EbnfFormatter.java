@@ -1,8 +1,18 @@
-package com.zealjagannatha.parsebuilder.grammar;
+package com.zealjagannatha.parsebuilder.grammar.formatter;
 
-public class HtmlGrammarFormatter extends GrammarFormatter { 
+import com.zealjagannatha.parsebuilder.grammar.Grammar;
+import com.zealjagannatha.parsebuilder.grammar.ListSymbol;
+import com.zealjagannatha.parsebuilder.grammar.Literal;
+import com.zealjagannatha.parsebuilder.grammar.NonTerminal;
+import com.zealjagannatha.parsebuilder.grammar.OptionalRhsValue;
+import com.zealjagannatha.parsebuilder.grammar.Production;
+import com.zealjagannatha.parsebuilder.grammar.ProductionLhs;
+import com.zealjagannatha.parsebuilder.grammar.ProductionRhs;
+import com.zealjagannatha.parsebuilder.grammar.RhsValue;
+import com.zealjagannatha.parsebuilder.grammar.Symbol;
 
-	@Override
+public class EbnfFormatter extends GrammarFormatter {
+	
 	public String formatGrammar(Grammar g) {
 		StringBuilder result = new StringBuilder();
 		for(Production p : g.getProductions()) {
@@ -12,29 +22,30 @@ public class HtmlGrammarFormatter extends GrammarFormatter {
 		return result.toString();
 	}
 
-	@Override
 	protected String formatProduction(Production p) {
 		StringBuilder result = new StringBuilder();
 		result.append(formatLhs(p.getLhs()));
-		result.append(" :=<br/>&nbsp;&nbsp;&nbsp;&nbsp;");
+		result.append(" ::= ( ");
+		boolean first = true;
 		for(ProductionRhs rhs : p.getRhss()) {
+			if(!first)
+				result.append(" | ");
+			first = false;
 			result.append(formatRhs(rhs));
-			result.append("<br/>");
 		}
+		result.append(" )");
 		return result.toString();
 	}
 
-	@Override
 	protected String formatRhs(ProductionRhs rhs) {
 		StringBuilder result = new StringBuilder();
 		for(RhsValue value : rhs.getSymbols()) {
 			result.append(formatRhsValue(value));
-			result.append("");
+			result.append(" ");
 		}
 		return result.toString();
 	}
 
-	@Override
 	protected String formatRhsValue(RhsValue value) {
 		if(value instanceof OptionalRhsValue)
 			return formatOptionalValue((OptionalRhsValue) value);
@@ -44,19 +55,17 @@ public class HtmlGrammarFormatter extends GrammarFormatter {
 			return value.toString();
 	}
 	
-	@Override
 	protected String formatOptionalValue(OptionalRhsValue val) {
 		StringBuilder result = new StringBuilder();
-		result.append("[ ");
+		result.append("( ");
 		for(Symbol sym : val.getSymbols()) {
 			result.append(formatSymbol(sym));
 			result.append(" ");
 		}
-		result.append("]");
+		result.append(" | )");
 		return result.toString();
 	}
 	
-	@Override
 	protected String formatSymbol(Symbol sym) {
 		if(sym instanceof Literal)
 			return formatLiteral((Literal) sym);
@@ -67,24 +76,20 @@ public class HtmlGrammarFormatter extends GrammarFormatter {
 		return sym.toString();
 	}
 	
-	@Override
 	protected String formatLiteral(Literal sym) {
-		return sym.toString();
+		return (sym.getValue().equals("'") ? "\"'\"" : "'" + sym.getValue() + "'");
 	}
 
-	@Override
 	protected String formatNonTerm(NonTerminal nt) {
 		return nt.toString();
 	}
 	
-	@Override
 	protected String formatListSymbol(ListSymbol sym) {
-		return String.format("List<%s,%s>",formatSymbol(sym.getType()),formatSymbol(sym.getDelimiter()));
+		return String.format("( %1$s ( '%2$s' %1$s )* )",formatSymbol(sym.getType()),formatSymbol(sym.getDelimiter()));
 	}
 
-	@Override
 	protected String formatLhs(ProductionLhs lhs) {
-		return String.format("<span style=\"color:#FF4466;\">%s</span>",lhs.toString());
+		return lhs.toString();
 	}
 
 }

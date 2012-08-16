@@ -1,10 +1,11 @@
 package skyql.query;
 
+
 import com.zealjagannatha.parsebuilder.BuildableClass.Buildable;
 import com.zealjagannatha.parsebuilder.TokenField.Token;
 
 @Buildable(prefix="'",suffix="'")
-public class SingleQuotedString extends QuotedString {
+public class SingleQuotedString extends Value {
 
 	@Token
 	private String value;

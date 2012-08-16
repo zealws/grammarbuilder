@@ -1,5 +1,7 @@
 package skyql.query;
 
+
+
 import com.zealjagannatha.parsebuilder.BuildableClass.Buildable;
 import com.zealjagannatha.parsebuilder.TokenField.Token;
 
@@ -7,9 +9,9 @@ import com.zealjagannatha.parsebuilder.TokenField.Token;
 public class TableName extends Value {
 	
 	@Token
-	private Identifier name;
+	private String name;
 	
-	public TableName(Identifier name) {
+	public TableName(String name) {
 		this.name = name;
 	}
 

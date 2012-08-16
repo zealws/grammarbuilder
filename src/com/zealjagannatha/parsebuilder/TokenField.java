@@ -27,6 +27,7 @@ public class TokenField {
 		int position() default 0;
 		String[] prefix() default {};
 		String[] suffix() default {};
+		String[] either() default {};
 		boolean optional() default false;
 		boolean ignoreCase() default true;
 		Class<?> subtype() default Object.class;
@@ -65,11 +66,17 @@ public class TokenField {
 	}
 
 	public Object read(ParserStream stream) throws IOException {
+		//System.out.println("Reading "+getName());
 		boolean use = true;
 		Object result = null;
-		if(token.optional())
-			use = stream.compareAndDiscardIfEq(token.prefix(), token.ignoreCase());
-		else 
+		if(token.optional()) {
+			if(token.either().length != 0)
+				use = stream.compareContainsAndIgnore(token.either(), token.ignoreCase());
+			else if(token.prefix().length != 0)
+				use = stream.compareAndDiscardIfEq(token.prefix(), token.ignoreCase());
+			else
+				throw new ParseException("Optional field but no way to determine it: "+getName());
+		} else 
 			stream.assertEqualsAndDiscard(token.prefix(), token.ignoreCase());
 		if(use) {
 			if(isList())

@@ -72,6 +72,7 @@ public class BuildableClass {
 	}
 
 	public Object read(ParserStream stream) throws IOException {
+		//System.out.println("Reading "+getName());
 		Object result;
 		stream.assertEqualsAndDiscard(build.prefix(), build.ignoreCase());
 		

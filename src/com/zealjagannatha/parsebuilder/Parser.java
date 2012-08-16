@@ -12,14 +12,8 @@ import com.zealjagannatha.parsebuilder.grammar.ProductionLhs;
 public abstract class Parser<T> {
 	@SuppressWarnings("unused")
 	private static class HtmlScheme {
-		public String bottomGrammar() { return ""; }
-		public String tab() { return "&nbsp;&nbsp;&nbsp;&nbsp;"; }
-		public String nonTerminalTag() { return "<span style='color:orange;'>"; }
-		public String nonTerminalEnd() { return "</span>"; }
 		public String terminalTag() { return "<span style='color:#D197D9;'>"; }
 		public String terminalEnd() { return "</span>"; }
-		public String literalTag() { return "<i><span style='color:#A6E22E;'>"; }
-		public String literalEnd() { return "</span></i>"; }
 		public String specialTag() { return "<span style='color:#272822;'>"; }
 		public String specialEnd() { return "</span>"; }
 	}

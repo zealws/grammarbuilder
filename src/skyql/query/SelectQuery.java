@@ -1,6 +1,9 @@
 package skyql.query;
 
+
+
 import java.util.List;
+
 
 import com.zealjagannatha.parsebuilder.BuildableClass.Buildable;
 import com.zealjagannatha.parsebuilder.TokenField.Token;
@@ -13,15 +16,15 @@ public class SelectQuery extends Query {
 	private List<ColumnName> columnList;
 	
 	@Token(position=1,prefix="from")
-	private String tableName;
+	private TableName tableName;
 	
 	@Token(position=2,optional=true,prefix="where")
 	private Expression expression;
 	
-	@Token(position=3,optional=true,prefix={"order","by"},subtype=String.class)
-	private List<String> orderings;
+	@Token(position=3,optional=true,prefix={"order","by"},subtype=Ordering.class)
+	private List<Ordering> orderings;
 	
-	public SelectQuery(List<ColumnName> columns, String tableName, Expression expression, List<String> orderings) {
+	public SelectQuery(List<ColumnName> columns, TableName tableName, Expression expression, List<Ordering> orderings) {
 		if(columns == null)
 			throw new IllegalStateException("Column list cannot be null.");
 		if(tableName == null)

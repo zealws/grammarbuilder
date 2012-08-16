@@ -86,4 +86,13 @@ public class ParserStream extends BasicStream {
 		return next.matches(matches);
 	}
 
+	public boolean compareContainsAndIgnore(String[] either, boolean ignoreCase) throws IOException {
+		String next = peekToken();
+		for(String s : either) {
+			if (compare(s, next, ignoreCase))
+				return true;
+		}
+		return false;
+	}
+
 }

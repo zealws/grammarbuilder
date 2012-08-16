@@ -1,5 +1,7 @@
 package skyql.query;
 
+
+
 import com.zealjagannatha.parsebuilder.BuildableClass.Buildable;
 import com.zealjagannatha.parsebuilder.TokenField.Token;
 
@@ -7,15 +9,15 @@ import com.zealjagannatha.parsebuilder.TokenField.Token;
 public class ColumnName extends Value {
 	
 	@Token
-	private Identifier name;
+	private String name;
 	
-	public ColumnName(Identifier name) {
+	public ColumnName(String name) {
 		this.name = name;
 	}
 
 	@Override
 	public String toString() {
-		return name.toString();
+		return name;
 	}
 
 }

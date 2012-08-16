@@ -1,15 +1,24 @@
-package com.zealjagannatha.parsebuilder.grammar;
+package com.zealjagannatha.parsebuilder.grammar.formatter;
+
+import com.zealjagannatha.parsebuilder.grammar.Grammar;
+import com.zealjagannatha.parsebuilder.grammar.ListSymbol;
+import com.zealjagannatha.parsebuilder.grammar.Literal;
+import com.zealjagannatha.parsebuilder.grammar.NonTerminal;
+import com.zealjagannatha.parsebuilder.grammar.OptionalRhsValue;
+import com.zealjagannatha.parsebuilder.grammar.Production;
+import com.zealjagannatha.parsebuilder.grammar.ProductionLhs;
+import com.zealjagannatha.parsebuilder.grammar.ProductionRhs;
+import com.zealjagannatha.parsebuilder.grammar.RhsValue;
+import com.zealjagannatha.parsebuilder.grammar.Symbol;
 
 public class GrammarFormatter {
 	
 	public String formatGrammar(Grammar g) {
 		StringBuilder result = new StringBuilder();
-		result.append("<div style=\"padding:10px;font-family:'Courier New',Courier,monospace;color:#272822;\">");
 		for(Production p : g.getProductions()) {
 			result.append(formatProduction(p));
 			result.append("\n");
 		}
-		result.append("</div>");
 		return result.toString();
 	}
 
@@ -17,10 +26,14 @@ public class GrammarFormatter {
 		StringBuilder result = new StringBuilder();
 		result.append(formatLhs(p.getLhs()));
 		result.append(" :=\n    ");
+		boolean first = true;
 		for(ProductionRhs rhs : p.getRhss()) {
+			if(!first)
+				result.append(" |\n    ");
+			first = false;
 			result.append(formatRhs(rhs));
-			result.append("\n    ");
 		}
+		result.append("\n");
 		return result.toString();
 	}
 
