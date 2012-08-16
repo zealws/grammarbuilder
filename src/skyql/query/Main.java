@@ -1,12 +1,15 @@
-package com.zealjagannatha.parsebuilder;
+package skyql.query;
 
-import skyql.query.Query;
+import java.io.File;
+import java.io.FileWriter;
 
+import com.zealjagannatha.parsebuilder.Parser;
 
 public class Main {
-	
 	public static void main(String[] args) throws Exception {
-		System.out.println(Parser.read(new CreatorStream(new InputStreamReader(System.in)), Query.class));
+		File outFile = new File("/Users/zeal/Desktop","grammar.htm");
+		System.out.println(Parser.generateActualGrammar(Query.class));
+		//System.out.println(Parser.parse("select x from y;", Query.class));
+		//System.out.println(Parser.getNextToken("select ", Query.class));
 	}
-
 }

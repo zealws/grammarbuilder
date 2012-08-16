@@ -1,20 +1,8 @@
 package skyql.query;
 
 import com.zealjagannatha.parsebuilder.BuildableClass.Buildable;
-import com.zealjagannatha.parsebuilder.TokenField.Token;
 
-@Buildable(prefix="'",suffix="'")
-public class QuotedString extends Value {
-
-	@Token
-	private String value;
+@Buildable(resolvers={DoubleQuotedString.class,SingleQuotedString.class})
+public abstract class QuotedString extends Value {
 	
-	public QuotedString(String value) {
-		this.value = value;
-	}
-	
-	@Override
-	public String toString() {
-		return "'" + value + "'";
-	}
 }

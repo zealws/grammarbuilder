@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.LinkedList;
 
+import com.zealjagannatha.parsebuilder.ParserLookaheadStream.LookaheadEndOfStream;
 
 public abstract class Parser<T> {
 	
 	private static class StyleScheme {
 		public String tab() { return "    "; }
 		public String nl() { return "\n"; }
+		public String space() { return " "; }
+		public String productionSym() { return ":"; }
 		public String lhsTag() { return ""; }
 		public String lhsEnd() { return ""; }
 		public String topGrammar() { return ""; }
@@ -24,13 +27,18 @@ public abstract class Parser<T> {
 		public String specialEnd() { return ""; }
 	}
 	
-	@SuppressWarnings("unused")
 	private static class HtmlScheme extends StyleScheme {
-		private static final String lhsColor = "red";
+		private static final String lhsColor = "#FF4466";
 		private static final String nonTerminalColor = "orange";
-		private static final String terminalColor = "blue";
-		private static final String literalColor = "green";
-		private static final String specialColor = "black";
+		private static final String terminalColor = "#D197D9";
+		private static final String literalColor = "#A6E22E";
+		private static final String specialColor = "#272822";
+		@Override
+		public String topGrammar() {
+			return "<div style=\"padding:10px;font-family:'Courier New',Courier,monospace;color:#272822;\">";
+		}
+		@Override
+		public String bottomGrammar() { return "</div>"; }
 		@Override
 		public String tab() { return "&nbsp;&nbsp;&nbsp;&nbsp;"; }
 		@Override
@@ -57,7 +65,7 @@ public abstract class Parser<T> {
 		public String specialEnd() { return "</span>"; }
 	}
 	
-	private static final StyleScheme scheme = new StyleScheme(); 
+	private static final StyleScheme scheme = new HtmlScheme();
 	
 	@SuppressWarnings("unchecked")
 	public static <K> K parse(ParserStream stream, Class<K> toRead) throws IOException {
@@ -71,13 +79,13 @@ public abstract class Parser<T> {
 	
 	public static <K> String generateGrammar(Class<K> toRead) {
 		BuildableClass clazz = new BuildableClass(toRead);
-		LinkedList<AnnotatedDeclaration> uniqueNonterminals = new LinkedList<AnnotatedDeclaration>();
-		LinkedList<AnnotatedDeclaration> toGenerate = new LinkedList<AnnotatedDeclaration>();
+		LinkedList<BuildableClass> uniqueNonterminals = new LinkedList<BuildableClass>();
+		LinkedList<BuildableClass> toGenerate = new LinkedList<BuildableClass>();
 		toGenerate.add(clazz);
 		while(!toGenerate.isEmpty()) {
-			AnnotatedDeclaration decl = toGenerate.poll();
+			BuildableClass decl = toGenerate.poll();
 			uniqueNonterminals.add(decl);
-			for(AnnotatedDeclaration sub : decl.getSubdeclarations()) {
+			for(BuildableClass sub : decl.getSubdeclarations()) {
 				if(!uniqueNonterminals.contains(sub) && !toGenerate.contains(sub)) {
 					toGenerate.add(sub);
 				}
@@ -85,12 +93,45 @@ public abstract class Parser<T> {
 		}
 		StringBuilder result = new StringBuilder();
 		result.append(scheme.topGrammar());
-		for(AnnotatedDeclaration decl : uniqueNonterminals) {
+		for(BuildableClass decl : uniqueNonterminals) {
 			result.append(decl.generateGrammar());
 			result.append("\n");
 		}
 		result.append(scheme.bottomGrammar());
 		return result.toString();
+	}
+	
+	public static <K> Grammar generateActualGrammar(Class<K> toRead) {
+		BuildableClass clazz = new BuildableClass(toRead);
+		LinkedList<BuildableClass> uniqueNonterminals = new LinkedList<BuildableClass>();
+		LinkedList<BuildableClass> toGenerate = new LinkedList<BuildableClass>();
+		toGenerate.add(clazz);
+		while(!toGenerate.isEmpty()) {
+			BuildableClass decl = toGenerate.poll();
+			uniqueNonterminals.add(decl);
+			for(BuildableClass sub : decl.getSubdeclarations()) {
+				if(!uniqueNonterminals.contains(sub) && !toGenerate.contains(sub)) {
+					toGenerate.add(sub);
+				}
+			}
+		}
+		Grammar result = new Grammar();
+		for(BuildableClass decl : uniqueNonterminals) {
+			result.addNonTerminal(decl.getName());
+			result.addProductions(decl.getName(),decl.generateProductions());
+		}
+		return result;
+	}
+	
+	public static <K> String getNextToken(String toParse, Class<K> start) throws IOException {
+		BuildableClass clazz = new BuildableClass(start);
+		ParserLookaheadStream stream = new ParserLookaheadStream(new StringReader(toParse));
+		try {
+			clazz.nextToken(stream);
+		} catch (LookaheadEndOfStream e) {
+			// do nothing
+		}
+		return (stream.getNextToken().size() == 0 ? "No tokens left." : Util.join(stream.getNextToken(),", "));
 	}
 	
 	static String nt(String val) {
@@ -117,8 +158,16 @@ public abstract class Parser<T> {
 		return scheme.tab();
 	}
 	
+	static String space() {
+		return scheme.space();
+	}
+	
 	static String lhs(String val) {
 		return scheme.lhsTag() + val + scheme.lhsEnd();
+	}
+	
+	static String productionSym() {
+		return scheme.productionSym();
 	}
 	
 }

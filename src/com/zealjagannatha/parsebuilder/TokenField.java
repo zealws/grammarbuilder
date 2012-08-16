@@ -15,7 +15,9 @@ import java.lang.reflect.Field;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TokenField implements AnnotatedDeclaration {
+import com.zealjagannatha.parsebuilder.ParserLookaheadStream.LookaheadEndOfStream;
+
+public class TokenField {
 	
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
@@ -60,7 +62,6 @@ public class TokenField implements AnnotatedDeclaration {
 		return field.getType() == String.class;
 	}
 
-	@Override
 	public Object read(ParserStream stream) throws IOException {
 		boolean use = true;
 		Object result = null;
@@ -82,7 +83,6 @@ public class TokenField implements AnnotatedDeclaration {
 			return null;
 	}
 
-	@Override
 	public String generateGrammar() {
 		StringBuilder grammar = new StringBuilder();
 		if(token.optional()) {
@@ -143,9 +143,8 @@ public class TokenField implements AnnotatedDeclaration {
 		return results;
 	}
 
-	@Override
-	public List<AnnotatedDeclaration> getSubdeclarations() {
-		List<AnnotatedDeclaration> results = new LinkedList<AnnotatedDeclaration>();
+	public List<BuildableClass> getSubdeclarations() {
+		List<BuildableClass> results = new LinkedList<BuildableClass>();
 		if(isList() && getListSubtype() != String.class)
 			results.add(new BuildableClass(getListSubtype()));
 		else if(!isList() && getType() != String.class)
@@ -167,6 +166,46 @@ public class TokenField implements AnnotatedDeclaration {
 			return false;
 		TokenField o = (TokenField) other;
 		return token == o.getToken() && field == o.getField();
+	}
+
+	public void nextToken(ParserLookaheadStream stream2) throws IOException {
+		//System.out.println("Next token for field "+field.getName());
+		ParserLookaheadStream stream;
+		if(token.optional())
+			stream = stream2.clone();
+		else
+			stream = stream2;
+		stream.assertEqualsAndDiscard(token.prefix(), token.ignoreCase());
+		if(isList()) {
+			nextTokenList(token.padding(),stream,token.subtype());
+		}
+		else if(field.getType() == String.class) {
+			if(stream.nextToken() == null) {
+				stream.setNextToken(field.getName());
+				throw new LookaheadEndOfStream();
+			}
+		}
+		else
+			new BuildableClass(field.getType()).nextToken(stream);
+		stream.assertEqualsAndDiscard(token.suffix(), token.ignoreCase());
+		return;
+	}
+
+	private <K> void nextTokenList(String padding, ParserLookaheadStream stream,
+			Class<K> clazz) throws IOException {
+		boolean cont = true;
+		while(cont) {
+			if(clazz == String.class) {
+				if(stream.nextToken() == null) {
+					stream.setNextToken(field.getName());
+					throw new LookaheadEndOfStream();
+				}
+			}
+			else
+				new BuildableClass(clazz).nextToken(stream);
+			cont = stream.compareAndDiscardIfEq(padding, false);
+		}
+		return;
 	}
 
 }

@@ -13,30 +13,6 @@ import com.zealjagannatha.parsebuilder.TokenField.Token;
 
 public class ParserTest {
 	
-	
-	
-	
-	
-	@Test
-	public void endOfStreamException() throws IOException {
-		@Buildable(suffix=";")
-		final class TestGrammar {
-			@Token
-			private String val;
-			public TestGrammar(String val) {
-				this.val = val;
-			}
-		}
-		
-		try {
-			Parser.parse("a",TestGrammar.class);
-		} catch (ParseException e) {
-			assertEquals("expected token ';' but got end of stream instead", e.getMessage());
-			return;
-		} 
-		throw new AssertionFailedError();
-	}
-	
 	@Test
 	public void nonBuildableException() throws IOException {
 		final class TestGrammar { }
@@ -71,5 +47,4 @@ public class ParserTest {
 		} 
 		throw new AssertionFailedError();
 	}
-
 }

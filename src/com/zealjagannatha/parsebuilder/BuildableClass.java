@@ -4,6 +4,7 @@ import static com.zealjagannatha.parsebuilder.Parser.lhs;
 import static com.zealjagannatha.parsebuilder.Parser.lt;
 import static com.zealjagannatha.parsebuilder.Parser.nt;
 import static com.zealjagannatha.parsebuilder.Parser.sc;
+import static com.zealjagannatha.parsebuilder.Parser.productionSym;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -18,10 +19,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
+import com.zealjagannatha.parsebuilder.Grammar.ProductionRhs;
+import com.zealjagannatha.parsebuilder.ParserLookaheadStream.LookaheadEndOfStream;
 import com.zealjagannatha.parsebuilder.TokenField.Token;
 
 
-public class BuildableClass implements AnnotatedDeclaration {
+public class BuildableClass {
 	
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)
@@ -71,7 +74,6 @@ public class BuildableClass implements AnnotatedDeclaration {
 		return build.ignoreCase();
 	}
 
-	@Override
 	public Object read(ParserStream stream) throws IOException {
 		Object result;
 		stream.assertEqualsAndDiscard(build.prefix(), build.ignoreCase());
@@ -87,7 +89,9 @@ public class BuildableClass implements AnnotatedDeclaration {
 			Constructor<?> ctor;
 			try {
 				ctor = clazz.getConstructor(getFieldTypes(fields));
-			} catch (SecurityException | NoSuchMethodException e) {
+			} catch (NoSuchMethodException e) {
+				throw new ParseException(String.format("Constructor %s(%s) must exist.",getName(),Util.join(fields,",")),e);
+			} catch (SecurityException e) {
 				throw new ParseException(String.format("Constructor %s(%s) must exist.",getName(),Util.join(fields,",")),e);
 			}
 			try {
@@ -123,11 +127,10 @@ public class BuildableClass implements AnnotatedDeclaration {
 		return results.toArray();
 	}
 
-	@Override
 	public String generateGrammar() {
 		StringBuilder grammar = new StringBuilder();
 		grammar.append(lhs(getName()));
-		grammar.append(" "+sc(":=")+Parser.nl());
+		grammar.append(" "+productionSym()+Parser.nl());
 		if(resolverClass()) {
 			boolean first = true;
 			for(BuildableClass resolver : getResolvers()) {
@@ -206,7 +209,7 @@ public class BuildableClass implements AnnotatedDeclaration {
 		return buildables;
 	}
 
-	private String getName() {
+	public String getName() {
 		return clazz.getSimpleName();
 	}
 	
@@ -215,9 +218,8 @@ public class BuildableClass implements AnnotatedDeclaration {
 		return getName();
 	}
 
-	@Override
-	public List<AnnotatedDeclaration> getSubdeclarations() {
-		List<AnnotatedDeclaration> results = new LinkedList<AnnotatedDeclaration>();
+	public List<BuildableClass> getSubdeclarations() {
+		List<BuildableClass> results = new LinkedList<BuildableClass>();
 		if(resolverClass()) {
 			for(BuildableClass c : getResolvers())
 				results.add(c);
@@ -234,6 +236,78 @@ public class BuildableClass implements AnnotatedDeclaration {
 			return false;
 		BuildableClass o = (BuildableClass) other;
 		return clazz.equals(o.clazz);
+	}
+
+	public void nextToken(ParserLookaheadStream stream) throws IOException {
+		//System.out.println("Next token for "+getName());
+		stream.assertEqualsAndDiscard(build.prefix(), build.ignoreCase());
+		
+		if(resolverClass()) {
+			List<BuildableClass> resolvers = getResolvers();
+			BuildableClass match = nextTokenResolver(stream, resolvers);
+			match.nextToken(stream);
+		} else {
+			List<TokenField> fields = getAnnotatedFields();
+			nextTokenFields(stream, fields);
+		}
+		stream.assertEqualsAndDiscard(build.suffix(), build.ignoreCase());
+	}
+
+	private BuildableClass nextTokenResolver(ParserLookaheadStream stream,
+			List<BuildableClass> resolvers) throws IOException {
+		BuildableClass match = null;
+		BuildableClass def = null;
+		for(BuildableClass resolver : resolvers) {
+			if(resolver.prefix().length == 0) {
+				if(def == null) {
+					def = resolver;
+				} else {
+					throw new RuntimeException(String.format("Conflicting default resolvers for type %s: %s and %s",getName(),resolver.getName(),def.getName()));
+				}
+			} else {
+				boolean matches = false;
+				matches = stream.compareAndPassIfEq(resolver.prefix(), resolver.ignoreCase());
+				if(matches) {
+					match = resolver;
+					break;
+				}
+			}
+		}
+		if(match == null && def == null) {
+			for(BuildableClass c : resolvers) {
+				if(c.prefix().length > 0)
+					stream.setNextToken(c.prefix()[0]);
+			}
+			throw new LookaheadEndOfStream();
+		}
+		else if(match == null && def != null)
+			match = def;
+		//System.out.println("    Using resolver "+match.getSimpleName());
+		return match;
+	}
+
+	private void nextTokenFields(ParserLookaheadStream stream,
+			List<TokenField> fields) throws IOException {
+		for(TokenField field : fields) {
+			field.nextToken(stream);
+		}
+		return;
+	}
+
+	public List<ProductionRhs> generateProductions() {
+		List<ProductionRhs> results = new LinkedList<ProductionRhs>();
+		if(resolverClass()) {
+			for(BuildableClass r : getResolvers()) {
+				results.add(new ProductionRhs(r.getName()));
+			}
+		} else {
+			List<String> symbols = new LinkedList<String>();
+			for(TokenField f : getAnnotatedFields()) {
+				symbols.add(f.getName());
+			}
+			results.add(new ProductionRhs(symbols));
+		}
+		return results;
 	}
 
 }

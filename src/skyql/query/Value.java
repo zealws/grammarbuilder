@@ -2,7 +2,7 @@ package skyql.query;
 
 import com.zealjagannatha.parsebuilder.BuildableClass.Buildable;
 
-@Buildable(resolvers={QuotedString.class,ColumnName.class})
+@Buildable(resolvers={SingleQuotedString.class,ColumnName.class})
 public abstract class Value {
 	
 	@Override
