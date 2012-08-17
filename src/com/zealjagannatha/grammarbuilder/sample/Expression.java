@@ -1,12 +1,10 @@
 package com.zealjagannatha.grammarbuilder.sample;
 
+import java.io.IOException;
+
 import com.zealjagannatha.grammarbuilder.Buildable;
 import com.zealjagannatha.grammarbuilder.Parser;
 import com.zealjagannatha.grammarbuilder.ParserTokenizer;
-import com.zealjagannatha.grammarbuilder.Token;
-
-import java.io.IOException;
-import java.nio.file.attribute.BasicFileAttributes;
 
 @Buildable(resolvers={PlusExpression.class,MinusExpression.class})
 public class Expression {
