@@ -19,9 +19,9 @@ import java.io.StringReader;
 import java.util.LinkedList;
 
 import com.zealjagannatha.grammarbuilder.ParserLookaheadStream.LookaheadEndOfStream;
-import com.zealjagannatha.parsebuilder.grammar.Grammar;
-import com.zealjagannatha.parsebuilder.grammar.Production;
-import com.zealjagannatha.parsebuilder.grammar.ProductionLhs;
+import com.zealjagannatha.grammarbuilder.grammar.Grammar;
+import com.zealjagannatha.grammarbuilder.grammar.Production;
+import com.zealjagannatha.grammarbuilder.grammar.ProductionLhs;
 
 public abstract class Parser<T> {
 	@SuppressWarnings("unused")

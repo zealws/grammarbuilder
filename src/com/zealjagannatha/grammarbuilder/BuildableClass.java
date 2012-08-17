@@ -16,10 +16,6 @@ package com.zealjagannatha.grammarbuilder;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -28,25 +24,15 @@ import java.util.List;
 import java.util.Vector;
 
 import com.zealjagannatha.grammarbuilder.ParserLookaheadStream.LookaheadEndOfStream;
-import com.zealjagannatha.grammarbuilder.TokenField.Token;
-import com.zealjagannatha.parsebuilder.grammar.Literal;
-import com.zealjagannatha.parsebuilder.grammar.NonTerminal;
-import com.zealjagannatha.parsebuilder.grammar.ProductionRhs;
-import com.zealjagannatha.parsebuilder.grammar.RhsValue;
+import com.zealjagannatha.grammarbuilder.grammar.Literal;
+import com.zealjagannatha.grammarbuilder.grammar.NonTerminal;
+import com.zealjagannatha.grammarbuilder.grammar.ProductionRhs;
+import com.zealjagannatha.grammarbuilder.grammar.RhsValue;
 
 
 public class BuildableClass {
-	
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.TYPE)
-	public @interface Buildable {
-		String[] prefix() default {};
-		String[] suffix() default {};
-		boolean ignoreCase() default true;
-		Class<?>[] resolvers() default {};
-	}
 
-	private Buildable build;
+    private Buildable build;
 	private Class<?> clazz;
 
 	public BuildableClass(Class<?> clazz) {
@@ -54,7 +40,7 @@ public class BuildableClass {
 		Annotation preBuildable = clazz.getAnnotation(Buildable.class);
 		if(!(preBuildable instanceof Buildable))
 			throw new ParseException("Attempt to create BuildableClass from non-buildable object: "+clazz.getSimpleName());
-		build = (BuildableClass.Buildable) preBuildable;
+		build = (Buildable) preBuildable;
 	}
 
 	public List<TokenField> getAnnotatedFields() {

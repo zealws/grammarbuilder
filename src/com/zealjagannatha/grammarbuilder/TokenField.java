@@ -16,41 +16,22 @@ package com.zealjagannatha.grammarbuilder;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.zealjagannatha.grammarbuilder.ParserLookaheadStream.LookaheadEndOfStream;
-import com.zealjagannatha.parsebuilder.grammar.ListSymbol;
-import com.zealjagannatha.parsebuilder.grammar.Literal;
-import com.zealjagannatha.parsebuilder.grammar.NonTerminal;
-import com.zealjagannatha.parsebuilder.grammar.OptionalRhsValue;
-import com.zealjagannatha.parsebuilder.grammar.RhsValue;
-import com.zealjagannatha.parsebuilder.grammar.Symbol;
+import com.zealjagannatha.grammarbuilder.grammar.Literal;
+import com.zealjagannatha.grammarbuilder.grammar.OptionalRhsValue;
+import com.zealjagannatha.grammarbuilder.grammar.RhsValue;
+import com.zealjagannatha.grammarbuilder.grammar.ListSymbol;
+import com.zealjagannatha.grammarbuilder.grammar.NonTerminal;
+import com.zealjagannatha.grammarbuilder.grammar.Symbol;
 
 public class TokenField {
-	
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.FIELD)
-	public @interface Token {
-		int position() default 0;
-		String[] prefix() default {};
-		String[] suffix() default {};
-		String[] either() default {};
-		boolean optional() default false;
-		boolean ignoreCase() default true;
-		Class<?> subtype() default Object.class;
-		String padding() default ",";
-		boolean greedy() default false;
-		String matches() default "";
-	}
-	
-	private Token token;
+
+    private Token token;
 	private Field field;
 	
 	public TokenField(Field field) {

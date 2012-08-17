@@ -1,4 +1,4 @@
-package com.zealjagannatha.parsebuilder.grammar;
+package com.zealjagannatha.grammarbuilder.grammar;
 
 //Copyright 2012 Zeal Jagannatha
 //

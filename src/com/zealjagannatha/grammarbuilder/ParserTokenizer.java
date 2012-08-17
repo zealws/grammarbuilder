@@ -20,7 +20,23 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-public abstract class BasicStream {
+public abstract class ParserTokenizer {
+
+    public static List<Character> specialChars = new LinkedList<Character>();
+    public static List<Character> modeChars = new LinkedList<Character>(Arrays.asList('\'','"'));
+
+    private static final List<Character> defaultSpecialChars
+            = Arrays.asList(
+            ';',
+            ',',
+            '*',
+            '=',
+            '(',
+            ')',
+            '=',
+            '<',
+            '>',
+            '!');
 	
 	private enum Mode { Normal , Escaped , Keep , No_Read };
 	
@@ -32,12 +48,12 @@ public abstract class BasicStream {
 	
 	private LinkedList<Integer> putBacks = new LinkedList<Integer>();
 	
-	protected BasicStream(LinkedList<String> parsedTokens) {
+	protected ParserTokenizer(LinkedList<String> parsedTokens) {
 		this.parsedTokens = parsedTokens;
 		this.mode = Mode.No_Read;
 	}
 	
-	public BasicStream(Reader reader) {
+	public ParserTokenizer(Reader reader) {
 		this.reader = reader;
 	}
 	
@@ -143,20 +159,16 @@ public abstract class BasicStream {
 	}
 	
 	public static boolean isSpecialCharacter(Character c) {
-		final List<Character> specChars
-			= Arrays.asList(
-					';',
-					',',
-					'*',
-					'=',
-					'(',
-					')',
-					'=',
-					'<',
-					'>',
-					'!');
-		return specChars.contains(c);
+		return specialChars.contains(c);
 	}
+
+    public static void addSpecialChar(Character c) {
+        specialChars.add(c);
+    }
+
+    public static void useDefaultChars() {
+        specialChars.addAll(defaultSpecialChars);
+    }
 	
 	public boolean hasMoreTokens() throws IOException {
 		readTokens();

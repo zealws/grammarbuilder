@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
 
-public class ParserStream extends BasicStream {
+public class ParserStream extends ParserTokenizer {
 	
 	public ParserStream(Reader reader) {
 		super(reader);
