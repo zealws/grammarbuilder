@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder.grammar;
+package com.zealjagannatha.grammarbuilder.sample.expression;
 
-public class NonTerminal implements Symbol {
-	
-	private String name;
-	
-	public NonTerminal(String name) {
-		this.name = name;
-	}
-	
-	@Override
-	public String toString() {
-		return name;
-	}
+import com.zealjagannatha.grammarbuilder.Buildable;
+import com.zealjagannatha.grammarbuilder.Token;
 
-    public String getName() {
-        return name;
+@Buildable(prefix="-")
+public class SubtractionExpression extends Expression {
+
+    @Token(position=0)
+    private String left;
+
+    @Token(position=1)
+    private String right;
+
+    public SubtractionExpression(String left, String right) {
+        this.left = left;
+        this.right = right;
     }
-
 }

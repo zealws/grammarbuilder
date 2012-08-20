@@ -18,8 +18,9 @@ package com.zealjagannatha.grammarbuilder.grammar.formatter;
 
 import com.zealjagannatha.grammarbuilder.grammar.*;
 
-public class EbnfFormatter extends TextFormatter {
+public class TextFormatter implements GrammarFormatter<String> {
 
+    @Override
     public String formatGrammar(Grammar g) {
         StringBuilder result = new StringBuilder();
         for (Production p : g.getProductions()) {
@@ -32,15 +33,15 @@ public class EbnfFormatter extends TextFormatter {
     protected String formatProduction(Production p) {
         StringBuilder result = new StringBuilder();
         result.append(formatLhs(p.getLhs()));
-        result.append(" ::= ( ");
+        result.append(" :=\n    ");
         boolean first = true;
         for (ProductionRhs rhs : p.getRhss()) {
             if (!first)
-                result.append(" | ");
+                result.append(" |\n    ");
             first = false;
             result.append(formatProductionRhs(rhs));
         }
-        result.append(" )");
+        result.append("\n");
         return result.toString();
     }
 
@@ -64,12 +65,12 @@ public class EbnfFormatter extends TextFormatter {
 
     protected String formatOptionalValue(OptionalRhsValue val) {
         StringBuilder result = new StringBuilder();
-        result.append("( ");
+        result.append("[ ");
         for (Symbol sym : val.getSymbols()) {
             result.append(formatSymbol(sym));
             result.append(" ");
         }
-        result.append(" | )");
+        result.append("]");
         return result.toString();
     }
 
@@ -84,7 +85,7 @@ public class EbnfFormatter extends TextFormatter {
     }
 
     protected String formatLiteral(Literal sym) {
-        return (sym.getValue().equals("'") ? "\"'\"" : "'" + sym.getValue() + "'");
+        return sym.toString();
     }
 
     protected String formatNonTerm(NonTerminal nt) {
@@ -92,7 +93,7 @@ public class EbnfFormatter extends TextFormatter {
     }
 
     protected String formatListSymbol(ListSymbol sym) {
-        return String.format("( %1$s ( '%2$s' %1$s )* )", formatSymbol(sym.getType()), formatSymbol(sym.getDelimiter()));
+        return String.format("List<%s,%s>", formatSymbol(sym.getType()), formatSymbol(sym.getDelimiter()));
     }
 
     protected String formatLhs(ProductionLhs lhs) {

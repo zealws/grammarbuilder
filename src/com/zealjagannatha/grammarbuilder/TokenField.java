@@ -1,18 +1,23 @@
+/*
+ * Copyright 2012 Zeal Jagannatha
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.zealjagannatha.grammarbuilder;
 
-//Copyright 2012 Zeal Jagannatha
-//
-//Licensed under the Apache License, Version 2.0 (the "License");
-//you may not use this file except in compliance with the License.
-//You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//Unless required by applicable law or agreed to in writing, software
-//distributed under the License is distributed on an "AS IS" BASIS,
-//WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//See the License for the specific language governing permissions and
-//limitations under the License.
+import com.zealjagannatha.grammarbuilder.ParserLookaheadStream.LookaheadEndOfStream;
+import com.zealjagannatha.grammarbuilder.grammar.*;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -20,14 +25,6 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-
-import com.zealjagannatha.grammarbuilder.ParserLookaheadStream.LookaheadEndOfStream;
-import com.zealjagannatha.grammarbuilder.grammar.Literal;
-import com.zealjagannatha.grammarbuilder.grammar.OptionalRhsValue;
-import com.zealjagannatha.grammarbuilder.grammar.RhsValue;
-import com.zealjagannatha.grammarbuilder.grammar.ListSymbol;
-import com.zealjagannatha.grammarbuilder.grammar.NonTerminal;
-import com.zealjagannatha.grammarbuilder.grammar.Symbol;
 
 public class TokenField {
 
@@ -63,7 +60,7 @@ public class TokenField {
 	public Object read(ParserStream stream) throws IOException {
 		//System.out.println("Reading "+getName());
 		boolean use = true;
-		Object result = null;
+		Object result;
 		if(token.optional()) {
 			if(token.either().length != 0)
 				use = stream.compareContainsAndIgnore(token.either(), token.ignoreCase());
@@ -75,9 +72,11 @@ public class TokenField {
 			stream.assertEqualsAndDiscard(token.prefix(), token.ignoreCase());
 		if(use) {
 			if(isList())
-				result = readList(token.padding(),stream,token.subtype());
-			else if(field.getType() == String.class)
-				result = stream.nextToken();
+				result = readList(token.padding(), stream, token.subtype());
+			else if(finalType(field.getType()))
+				result = readFinalType(stream,field.getType());
+            else if(field.getType() == Double.class || field.getType() == double.class)
+                result = Double.parseDouble(stream.nextToken());
 			else
 				result = new BuildableClass(field.getType()).read(stream);
 			stream.assertEqualsAndDiscard(token.suffix(), token.ignoreCase());
@@ -101,8 +100,8 @@ public class TokenField {
 		List<K> results = new LinkedList<K>();
 		boolean cont = true;
 		while(cont) {
-			if(clazz == String.class)
-				results.add((K) stream.nextToken());
+			if(finalType(clazz))
+				results.add(readFinalType(stream,clazz));
 			else
 				results.add((K) new BuildableClass(clazz).read(stream));
 			cont = stream.compareAndDiscardIfEq(padding, false);
@@ -112,12 +111,30 @@ public class TokenField {
 
 	public List<BuildableClass> getSubdeclarations() {
 		List<BuildableClass> results = new LinkedList<BuildableClass>();
-		if(isList() && getListSubtype() != String.class)
-			results.add(new BuildableClass(getListSubtype()));
-		else if(!isList() && getType() != String.class)
-			results.add(new BuildableClass(getType()));
+        if(isList()) {
+            if(finalType(getListSubtype()))
+                ;
+            else
+                results.add(new BuildableClass(getListSubtype()));
+        } else {
+            if(!finalType(getType()))
+			    results.add(new BuildableClass(getType()));
+        }
 		return results;
 	}
+
+    private static <T> boolean finalType(Class<T> clazz) {
+        return clazz == String.class || clazz == Double.class;
+    }
+
+    private static <T> T readFinalType(ParserStream stream, Class<T> clazz) throws IOException {
+        if(clazz == String.class)
+            return (T) stream.nextToken();
+        else if(clazz == Double.class)
+            return (T) new Double(Double.parseDouble((stream.nextToken())));
+        else
+            return null;
+    }
 	
 	private Token getToken() {
 		return token;

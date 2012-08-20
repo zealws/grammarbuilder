@@ -18,33 +18,17 @@ package com.zealjagannatha.grammarbuilder.grammar.formatter;
 
 import com.zealjagannatha.grammarbuilder.grammar.*;
 
-public class HtmlFormatter extends TextFormatter {
+public class FancyHtmlFormatter extends HtmlFormatter {
 
     @Override
     public String formatGrammar(Grammar g) {
         StringBuilder result = new StringBuilder();
-        result.append("<div style=\"padding:10px;font-family:'Courier New',Courier,monospace;\">");
+        result.append("<div style=\"padding:10px;font-family:'Courier New',Courier,monospace;color:#272822;\">");
         for (Production p : g.getProductions()) {
             result.append(formatProduction(p));
             result.append("<br/>");
         }
         result.append("</div>");
-        return result.toString();
-    }
-
-    @Override
-    protected String formatProduction(Production p) {
-        StringBuilder result = new StringBuilder();
-        result.append(formatLhs(p.getLhs()));
-        result.append(" :=<br/>&nbsp;&nbsp;&nbsp;&nbsp;");
-        boolean first = true;
-        for (ProductionRhs rhs : p.getRhss()) {
-            if (!first)
-                result.append(" |<br/>&nbsp;&nbsp;&nbsp;&nbsp;");
-            first = false;
-            result.append(formatProductionRhs(rhs));
-        }
-        result.append("<br/>");
         return result.toString();
     }
 
@@ -67,5 +51,4 @@ public class HtmlFormatter extends TextFormatter {
     protected String formatLhs(ProductionLhs lhs) {
         return String.format("<span style=\"color:#FF4466;\">%s</span>", lhs.toString());
     }
-
 }

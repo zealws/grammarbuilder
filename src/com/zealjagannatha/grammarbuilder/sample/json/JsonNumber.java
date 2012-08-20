@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder.grammar;
+package com.zealjagannatha.grammarbuilder.sample.json;
 
-public class NonTerminal implements Symbol {
-	
-	private String name;
-	
-	public NonTerminal(String name) {
-		this.name = name;
-	}
-	
-	@Override
-	public String toString() {
-		return name;
-	}
+import com.zealjagannatha.grammarbuilder.Buildable;
+import com.zealjagannatha.grammarbuilder.Token;
 
-    public String getName() {
-        return name;
+@Buildable
+public class JsonNumber implements JsonValue {
+
+    @Token
+    private Double value;
+
+    public JsonNumber(Double value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value.toString();
     }
 
 }
