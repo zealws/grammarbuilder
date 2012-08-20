@@ -17,11 +17,6 @@
 package com.zealjagannatha.grammarbuilder.sample.json;
 
 import com.zealjagannatha.grammarbuilder.Buildable;
-import com.zealjagannatha.grammarbuilder.grammar.formatter.FileFormatWriter;
-import com.zealjagannatha.grammarbuilder.grammar.formatter.JsonFormatter;
-
-import java.io.File;
-import java.io.IOException;
 
 @Buildable(resolvers={JsonHash.class, JsonList.class, JsonString.class, JsonNumber.class})
 public interface JsonValue {

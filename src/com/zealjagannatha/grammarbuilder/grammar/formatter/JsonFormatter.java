@@ -23,7 +23,8 @@ import org.json.simple.JSONObject;
 public class JsonFormatter implements GrammarFormatter<JSONObject> {
 
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public JSONObject formatGrammar(Grammar g) {
         JSONObject nonterminals = new JSONObject();
         for(Production p : g.getProductions())
@@ -33,14 +34,16 @@ public class JsonFormatter implements GrammarFormatter<JSONObject> {
         return grammar;
     }
 
-    protected JSONArray formatProduction(Production p) {
+    @SuppressWarnings("unchecked")
+	protected JSONArray formatProduction(Production p) {
         JSONArray rhss = new JSONArray();
         for(ProductionRhs rhs : p.getRhss())
             rhss.add(formatProductionRhs(rhs));
         return rhss;
     }
 
-    protected JSONArray formatProductionRhs(ProductionRhs rhs) {
+    @SuppressWarnings("unchecked")
+	protected JSONArray formatProductionRhs(ProductionRhs rhs) {
         JSONArray arr = new JSONArray();
         for(RhsValue val : rhs.getSymbols())
             arr.add(formatRhsValue(val));
@@ -55,7 +58,8 @@ public class JsonFormatter implements GrammarFormatter<JSONObject> {
         return null; // TODO rework this
     }
 
-    protected JSONObject formatOptionalValue(OptionalRhsValue val) {
+    @SuppressWarnings("unchecked")
+	protected JSONObject formatOptionalValue(OptionalRhsValue val) {
         JSONArray values = new JSONArray();
         for(Symbol sym : val.getSymbols())
             values.add(formatSymbol(sym));
@@ -75,19 +79,22 @@ public class JsonFormatter implements GrammarFormatter<JSONObject> {
 
     }
 
-    protected JSONObject formatLiteral(Literal sym) {
+    @SuppressWarnings("unchecked")
+	protected JSONObject formatLiteral(Literal sym) {
         JSONObject lit = new JSONObject();
         lit.put("literal",sym.getValue());
         return lit;
     }
 
-    protected JSONObject formatNonTerm(NonTerminal nt) {
+    @SuppressWarnings("unchecked")
+	protected JSONObject formatNonTerm(NonTerminal nt) {
         JSONObject nonterm = new JSONObject();
         nonterm.put("nonterminal",nt.getName());
         return nonterm;
     }
 
-    protected JSONObject formatListSymbol(ListSymbol sym) {
+    @SuppressWarnings("unchecked")
+	protected JSONObject formatListSymbol(ListSymbol sym) {
         JSONObject sub = new JSONObject();
         sub.put("subtype",sym.getType().toString());
         sub.put("delimiter",sym.getDelimiter());

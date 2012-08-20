@@ -32,4 +32,8 @@ public class SubtractionExpression extends Expression {
         this.left = left;
         this.right = right;
     }
+    
+    public String toString() {
+    	return left + " - " + right;
+    }
 }
