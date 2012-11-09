@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder.sample.expression;
+package grammarbuilder.sample.json;
 
-import com.zealjagannatha.grammarbuilder.Buildable;
-import com.zealjagannatha.grammarbuilder.Token;
+import grammarbuilder.Parsable;
+import grammarbuilder.Symbol;
 
-@Buildable(prefix="+")
-public class AdditionExpression extends Expression {
+@Parsable
+public class JsonNumber implements JsonValue {
 
-    @Token(position=0)
-    private String left;
+    @Symbol
+    private Double value;
 
-    @Token(position=1)
-    private String right;
-
-    public AdditionExpression(String left, String right) {
-        this.left = left;
-        this.right = right;
+    public JsonNumber(Double value) {
+        this.value = value;
     }
-    
+
+    @Override
     public String toString() {
-    	return left + " + " + right;
+        return value.toString();
     }
+
 }

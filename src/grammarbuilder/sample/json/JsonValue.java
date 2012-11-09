@@ -14,23 +14,10 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder.sample.json;
+package grammarbuilder.sample.json;
 
-import com.zealjagannatha.grammarbuilder.Buildable;
-import com.zealjagannatha.grammarbuilder.Token;
+import grammarbuilder.Parsable;
 
-@Buildable(prefix="'",suffix="'")
-public class JsonString implements JsonValue {
-
-    @Token
-    private String value;
-
-    public JsonString(String value) {
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return "'" + value + "' ";
-    }
+@Parsable(resolvers={JsonHash.class, JsonList.class, JsonString.class, JsonNumber.class})
+public interface JsonValue {
 }

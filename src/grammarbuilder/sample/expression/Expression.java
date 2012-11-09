@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder.sample.expression;
+package grammarbuilder.sample.expression;
+
+import grammarbuilder.Parsable;
 
 import java.io.File;
 import java.io.IOException;
 
-import com.zealjagannatha.grammarbuilder.Buildable;
 import com.zealjagannatha.grammarbuilder.grammar.formatter.FileFormatWriter;
 import com.zealjagannatha.grammarbuilder.grammar.formatter.HtmlFormatter;
 
-@Buildable(prefix="(",suffix=")",resolvers={AdditionExpression.class,SubtractionExpression.class})
+@Parsable(prefix="(",suffix=")",resolvers={AdditionExpression.class,SubtractionExpression.class})
 public abstract class Expression {
 
     public static void main(String[] args) throws IOException {

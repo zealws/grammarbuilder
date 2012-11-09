@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder;
+package com.zealjagannatha.grammarbuilder.old;
 
-import com.zealjagannatha.grammarbuilder.ParserLookaheadStream.LookaheadEndOfStream;
 import com.zealjagannatha.grammarbuilder.grammar.Grammar;
 import com.zealjagannatha.grammarbuilder.grammar.Production;
 import com.zealjagannatha.grammarbuilder.grammar.ProductionLhs;
+import com.zealjagannatha.grammarbuilder.old.ParserLookaheadStream.LookaheadEndOfStream;
 
 import java.io.IOException;
 import java.io.StringReader;

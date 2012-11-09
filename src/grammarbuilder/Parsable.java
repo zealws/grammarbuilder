@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder.sample.json;
+package grammarbuilder;
 
-import com.zealjagannatha.grammarbuilder.Buildable;
-import com.zealjagannatha.grammarbuilder.Token;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@Buildable
-public class JsonNumber implements JsonValue {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface Parsable {
+	String[] prefix() default {};
 
-    @Token
-    private Double value;
+	String[] suffix() default {};
 
-    public JsonNumber(Double value) {
-        this.value = value;
-    }
+	boolean ignoreCase() default true;
 
-    @Override
-    public String toString() {
-        return value.toString();
-    }
-
+	Class<?>[] resolvers() default {};
 }

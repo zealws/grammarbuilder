@@ -14,10 +14,27 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder.sample.json;
+package grammarbuilder.sample.json;
 
-import com.zealjagannatha.grammarbuilder.Buildable;
+import com.zealjagannatha.grammarbuilder.old.Util;
 
-@Buildable(resolvers={JsonHash.class, JsonList.class, JsonString.class, JsonNumber.class})
-public interface JsonValue {
+import grammarbuilder.Parsable;
+import grammarbuilder.Symbol;
+
+import java.util.List;
+
+@Parsable(prefix="[",suffix="]")
+public class JsonList implements JsonValue {
+
+    @Symbol(subtype=JsonValue.class)
+    private List<JsonValue> values;
+
+    public JsonList(List<JsonValue> values) {
+        this.values = values;
+    }
+
+    @Override
+    public String toString() {
+        return "[ " + Util.join(values,", ") + "] ";
+    }
 }

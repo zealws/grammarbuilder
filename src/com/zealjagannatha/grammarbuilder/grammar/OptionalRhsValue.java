@@ -16,7 +16,7 @@
 
 package com.zealjagannatha.grammarbuilder.grammar;
 
-import com.zealjagannatha.grammarbuilder.Util;
+import com.zealjagannatha.grammarbuilder.old.Util;
 
 import java.util.List;
 

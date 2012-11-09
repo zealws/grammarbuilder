@@ -14,27 +14,26 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder.sample.json;
+package grammarbuilder.sample.expression;
 
-import com.zealjagannatha.grammarbuilder.Buildable;
-import com.zealjagannatha.grammarbuilder.Token;
+import grammarbuilder.Parsable;
+import grammarbuilder.Symbol;
 
-@Buildable
-public class JsonPair {
+@Parsable(prefix = "-")
+public class SubtractionExpression extends Expression {
 
-    @Token(position=0,suffix=":")
-    private JsonString name;
+	@Symbol
+	private String left;
 
-    @Token(position=1)
-    private JsonValue value;
+	@Symbol
+	private String right;
 
-    public JsonPair(JsonString name, JsonValue value) {
-        this.name = name;
-        this.value = value;
-    }
+	public SubtractionExpression(String left, String right) {
+		this.left = left;
+		this.right = right;
+	}
 
-    @Override
-    public String toString() {
-        return name + ": " + value + " ";
-    }
+	public String toString() {
+		return left + " - " + right;
+	}
 }

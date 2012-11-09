@@ -16,7 +16,7 @@
 
 package com.zealjagannatha.grammarbuilder.grammar.formatter;
 
-import com.zealjagannatha.grammarbuilder.Parser;
+import com.zealjagannatha.grammarbuilder.old.Parser;
 
 import java.io.File;
 import java.io.FileWriter;

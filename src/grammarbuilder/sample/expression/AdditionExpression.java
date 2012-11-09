@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder;
+package grammarbuilder.sample.expression;
 
-public class ParseException extends RuntimeException {
-	
-	private static final long serialVersionUID = 4633167383696119202L;
+import grammarbuilder.Parsable;
+import grammarbuilder.Symbol;
 
-	public ParseException() {
-		super();
-	}
-	
-	public ParseException(String message) {
-		super(message);
-	}
-	
-	public ParseException(String message, Throwable cause) {
-		super(message,cause);
+@Parsable(prefix = "+")
+public class AdditionExpression extends Expression {
+
+	@Symbol
+	private String left;
+
+	@Symbol
+	private String right;
+
+	public AdditionExpression(String left, String right) {
+		this.left = left;
+		this.right = right;
 	}
 
+	@Override
+	public String toString() {
+		return left + " + " + right;
+	}
 }

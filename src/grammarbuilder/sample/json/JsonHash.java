@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder.sample.json;
+package grammarbuilder.sample.json;
 
-import com.zealjagannatha.grammarbuilder.*;
 import com.zealjagannatha.grammarbuilder.grammar.formatter.FileFormatWriter;
 import com.zealjagannatha.grammarbuilder.grammar.formatter.HtmlFormatter;
 import com.zealjagannatha.grammarbuilder.grammar.formatter.JsonFormatter;
+import com.zealjagannatha.grammarbuilder.old.Parser;
+import com.zealjagannatha.grammarbuilder.old.ParserTokenizer;
+import com.zealjagannatha.grammarbuilder.old.Util;
+
+import grammarbuilder.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-@Buildable(prefix="{",suffix="}")
+@Parsable(prefix="{",suffix="}")
 public class JsonHash implements JsonValue {
 
-    @Token(subtype=JsonPair.class)
+    @Symbol(subtype=JsonPair.class)
     private List<JsonPair> pairs;
 
     public JsonHash(List<JsonPair> pairs) {

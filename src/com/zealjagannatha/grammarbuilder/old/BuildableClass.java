@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder;
+package com.zealjagannatha.grammarbuilder.old;
 
-import com.zealjagannatha.grammarbuilder.ParserLookaheadStream.LookaheadEndOfStream;
 import com.zealjagannatha.grammarbuilder.grammar.Literal;
 import com.zealjagannatha.grammarbuilder.grammar.NonTerminal;
 import com.zealjagannatha.grammarbuilder.grammar.ProductionRhs;
 import com.zealjagannatha.grammarbuilder.grammar.RhsValue;
+import com.zealjagannatha.grammarbuilder.old.ParserLookaheadStream.LookaheadEndOfStream;
+
+import grammarbuilder.Parsable;
+import grammarbuilder.Symbol;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -34,22 +37,22 @@ import java.util.Vector;
 
 public class BuildableClass {
 
-    private Buildable build;
+    private Parsable build;
 	private Class<?> clazz;
 
 	public BuildableClass(Class<?> clazz) {
 		this.clazz = clazz;
-		Annotation preBuildable = clazz.getAnnotation(Buildable.class);
-		if(!(preBuildable instanceof Buildable))
+		Annotation preBuildable = clazz.getAnnotation(Parsable.class);
+		if(!(preBuildable instanceof Parsable))
 			throw new ParseException("Attempt to create BuildableClass from non-buildable object: "+clazz.getSimpleName());
-		build = (Buildable) preBuildable;
+		build = (Parsable) preBuildable;
 	}
 
 	public List<TokenField> getAnnotatedFields() {
 		List<Field> prelim = new Vector<Field>();
 		for(Field field : clazz.getDeclaredFields()) {
-			Annotation an = field.getAnnotation(Token.class);
-			if(an instanceof Token) {
+			Annotation an = field.getAnnotation(Symbol.class);
+			if(an instanceof Symbol) {
 				prelim.add(field);
 			}
 		}
@@ -57,7 +60,7 @@ public class BuildableClass {
 		List<TokenField> results = new LinkedList<TokenField>();
 		for(int i = 0; i < prelim.size(); i++) {
 			for(Field field : prelim) {
-				Token an = field.getAnnotation(Token.class);
+				Symbol an = field.getAnnotation(Symbol.class);
 				if(an.position() == i)
 					results.add(new TokenField(field));
 			}

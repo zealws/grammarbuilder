@@ -14,26 +14,22 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder.sample.expression;
+package com.zealjagannatha.grammarbuilder.old;
 
-import com.zealjagannatha.grammarbuilder.Buildable;
-import com.zealjagannatha.grammarbuilder.Token;
+public class ParseException extends RuntimeException {
+	
+	private static final long serialVersionUID = 4633167383696119202L;
 
-@Buildable(prefix="-")
-public class SubtractionExpression extends Expression {
+	public ParseException() {
+		super();
+	}
+	
+	public ParseException(String message) {
+		super(message);
+	}
+	
+	public ParseException(String message, Throwable cause) {
+		super(message,cause);
+	}
 
-    @Token(position=0)
-    private String left;
-
-    @Token(position=1)
-    private String right;
-
-    public SubtractionExpression(String left, String right) {
-        this.left = left;
-        this.right = right;
-    }
-    
-    public String toString() {
-    	return left + " - " + right;
-    }
 }

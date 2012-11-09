@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.zealjagannatha.grammarbuilder;
+package com.zealjagannatha.grammarbuilder.old;
 
 import java.io.IOException;
 import java.io.Reader;
