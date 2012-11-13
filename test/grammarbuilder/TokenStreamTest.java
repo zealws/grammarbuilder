@@ -44,20 +44,23 @@ public class TokenStreamTest {
 	}
 
 	@Test
+	public void ignore() {
+		TokenStream stream = new TokenStream();
+		stream.feed("feeding the stream some tokens");
+		stream.addSpecialCharacter('e', Behavior.Ignore);
+		stream.addSpecialCharacter(' ', Behavior.Discard);
+
+		assertTokensEqual(stream, "fding", "th", "stram", "som", "tokns");
+	}
+
+	@Test
 	public void grouping() {
 		TokenStream stream = new TokenStream();
 		stream.feed("feeeeeeding the streeam");
 		stream.addSpecialCharacter(' ', Behavior.Discard);
 		stream.addSpecialCharacter('e', Behavior.Group);
 
-		assertEquals("f", stream.next());
-		assertEquals("eeeeee", stream.next());
-		assertEquals("ding", stream.next());
-		assertEquals("th", stream.next());
-		assertEquals("e", stream.next());
-		assertEquals("str", stream.next());
-		assertEquals("ee", stream.next());
-		assertEquals("am", stream.next());
+		assertTokensEqual(stream, "f", "eeeeee", "ding", "th", "e", "str", "ee", "am");
 	}
 
 	@Test
@@ -87,7 +90,8 @@ public class TokenStreamTest {
 			assertEquals(null, stream.next());
 		else {
 			for (String token : tokens) {
-				assertEquals(token, stream.next());
+				stream.next();
+				assertEquals(token, stream.getCurrentToken());
 			}
 		}
 	}
@@ -110,31 +114,10 @@ public class TokenStreamTest {
 		stream.feed("this is some sample text to test clone for token stream");
 		stream.addSpecialCharacter(' ', Behavior.Discard);
 		TokenStream other = stream.clone();
-		assertEquals("this", stream.next());
-		assertEquals("is", stream.next());
-		assertEquals("some", stream.next());
-		assertEquals("sample", stream.next());
-		assertEquals("text", stream.next());
-
-		assertEquals("this", other.next());
-		assertEquals("is", other.next());
-		assertEquals("some", other.next());
-		assertEquals("sample", other.next());
-		assertEquals("text", other.next());
-
-		assertEquals("to", stream.next());
-		assertEquals("test", stream.next());
-		assertEquals("clone", stream.next());
-		assertEquals("for", stream.next());
-		assertEquals("token", stream.next());
-		assertEquals("stream", stream.next());
-
-		assertEquals("to", other.next());
-		assertEquals("test", other.next());
-		assertEquals("clone", other.next());
-		assertEquals("for", other.next());
-		assertEquals("token", other.next());
-		assertEquals("stream", other.next());
+		assertTokensEqual(stream, "this", "is", "some", "sample", "text");
+		assertTokensEqual(other, "this", "is", "some", "sample", "text");
+		assertTokensEqual(stream, "to", "test", "clone", "for", "token", "stream");
+		assertTokensEqual(other, "to", "test", "clone", "for", "token", "stream");
 	}
 
 	@Test
@@ -152,5 +135,37 @@ public class TokenStreamTest {
 		assertEquals("is", stream.next());
 		assertEquals("some", stream.next());
 		assertEquals("text", stream.next());
+	}
+
+	@Test(expected = RuntimeException.class)
+	public void putsBack1Token() {
+		TokenStream stream = new TokenStream();
+		stream.putback("blah");
+		stream.putback("blah2");
+	}
+
+	@Test
+	public void keepsToken() {
+		TokenStream stream = new TokenStream();
+		stream.addSpecialCharacter(')', Behavior.Keep);
+		stream.feed("f)");
+		assertTokensEqual(stream, "f", ")");
+	}
+
+	@Test
+	public void ignoresFirstWhitespace() {
+		TokenStream stream = new TokenStream();
+		stream.addSpecialCharacter(' ', Behavior.Discard);
+		stream.feed(" f");
+		assertTokensEqual(stream, "f");
+	}
+
+	@Test
+	public void escapesProperly() {
+		TokenStream stream = new TokenStream();
+		stream.addSpecialCharacter('\'', Behavior.Escape);
+		stream.addSpecialCharacter(' ', Behavior.Discard);
+		stream.feed("abc'd e'f");
+		assertTokensEqual(stream, "abc", "'", "d e", "'", "f");
 	}
 }

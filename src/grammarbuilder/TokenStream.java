@@ -3,13 +3,13 @@ package grammarbuilder;
 import java.util.Deque;
 import java.util.Hashtable;
 import java.util.LinkedList;
-import java.util.List;
 
 public class TokenStream {
 
-	private Deque<Character> charBuffer = new LinkedList<Character>();
+	private Deque<Character> buffer = new LinkedList<Character>();
 	private String putbackToken;
 	private Character putback;
+	private Character escapeChar = null;
 
 	private String currentToken;
 
@@ -35,7 +35,13 @@ public class TokenStream {
 		// End the current token and use this character as the first
 		// character in the next token.
 		// Designates the first character in a token.
-		Threshold
+		Threshold,
+		// End the current token. Use this character as the current escape
+		// character and full next token. Future tokens are read in literally,
+		// ignoring all special characters until the character that caused the
+		// escape is given again.
+		// Designates a single token and the start of escaping.
+		Escape
 	}
 
 	public void addSpecialCharacter(Character c, Behavior b) {
@@ -49,14 +55,11 @@ public class TokenStream {
 	}
 
 	public void feed(char c) {
-		charBuffer.addLast(c);
+		buffer.addLast(c);
 	}
 
 	public void feed(String... strings) {
-		for (String s : strings) {
-			feed(s);
-			feed(' ');
-		}
+		feed(' ', strings);
 	}
 
 	public void feed(char padding, String... strings) {
@@ -64,10 +67,6 @@ public class TokenStream {
 			feed(s);
 			feed(padding);
 		}
-	}
-
-	public String getCurrentToken() {
-		return currentToken;
 	}
 
 	public String next() {
@@ -86,7 +85,7 @@ public class TokenStream {
 			return new StringBuilder().append(temp);
 		}
 		StringBuilder token = new StringBuilder();
-		boolean finished = charBuffer.isEmpty();
+		boolean finished = false;
 		Character groupChar = null;
 		while (!finished) {
 			Character c = readNextCharacter();
@@ -100,6 +99,17 @@ public class TokenStream {
 					} else {
 						token.append(c);
 					}
+				} else if (escapeChar != null) {
+					if (c.equals(escapeChar)) {
+						if (token.length() != 0) {
+							putback(c);
+							return token;
+						} else {
+							escapeChar = null;
+							return token.append(c);
+						}
+					} else
+						token.append(c);
 				} else if (specialChars.containsKey(c)) {
 					switch (specialChars.get(c)) {
 					case Keep:
@@ -123,8 +133,6 @@ public class TokenStream {
 							return token;
 						}
 						break;
-					case Ignore:
-						break;
 					case Terminate:
 						token.append(c);
 						return token;
@@ -136,6 +144,16 @@ public class TokenStream {
 							return token;
 						}
 						break;
+					case Ignore:
+						break;
+					case Escape:
+						if (token.length() == 0) {
+							escapeChar = c;
+							return token.append(c);
+						} else {
+							putback(c);
+							return token;
+						}
 					}
 				} else {
 					token.append(c);
@@ -146,10 +164,10 @@ public class TokenStream {
 	}
 
 	private Character readNextCharacter() {
-		if (putback == null && charBuffer.isEmpty())
+		if (putback == null && buffer.isEmpty())
 			return null;
 		else if (putback == null)
-			return charBuffer.removeFirst();
+			return buffer.removeFirst();
 		else {
 			Character temp = putback;
 			putback = null;
@@ -158,10 +176,7 @@ public class TokenStream {
 	}
 
 	private void putback(Character c) {
-		if (putback == null)
-			putback = c;
-		else
-			throw new RuntimeException("Conflict with existing put-back character.");
+		putback = c;
 	}
 
 	public void putback(String token) {
@@ -171,21 +186,11 @@ public class TokenStream {
 			throw new RuntimeException("Conflict with existing put-back token: " + putbackToken);
 	}
 
-	public List<String> getAllTokens() {
-		List<String> tokens = new LinkedList<String>();
-		String nextToken = next();
-		while (nextToken != null) {
-			tokens.add(nextToken);
-			nextToken = next();
-		}
-		return tokens;
-	}
-
 	@Override
 	public TokenStream clone() {
 		TokenStream other = new TokenStream();
-		for (Character c : charBuffer) {
-			other.charBuffer.addLast(c);
+		for (Character c : buffer) {
+			other.buffer.addLast(c);
 		}
 		other.currentToken = currentToken;
 		other.putback = putback;
@@ -195,19 +200,26 @@ public class TokenStream {
 	}
 
 	public void restoreFrom(TokenStream other) {
-		charBuffer = other.charBuffer;
+		buffer = other.buffer;
 		currentToken = other.currentToken;
 		putback = other.putback;
 		putbackToken = other.putbackToken;
 	}
 
-	@Override
-	public String toString() {
+	public String getCurrentToken() {
+		return currentToken;
+	}
+
+	public String getBuffer() {
 		StringBuilder b = new StringBuilder();
-		if (putback != null)
-			b.append(putback);
-		for (Character c : charBuffer)
-			b.append(c);
-		return String.format("current='%s'\nputbackToken='%s'\nraw='%s'", currentToken, putbackToken, b.toString());
+		for (Character c : buffer) {
+			if (c == '\n')
+				b.append("\\n");
+			else if (c == '\t')
+				b.append("\\t");
+			else
+				b.append(c);
+		}
+		return b.toString();
 	}
 }

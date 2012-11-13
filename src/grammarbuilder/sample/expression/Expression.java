@@ -17,12 +17,12 @@
 package grammarbuilder.sample.expression;
 
 import grammarbuilder.Parsable;
+import grammarbuilder.grammar.formatter.FileFormatWriter;
+import grammarbuilder.grammar.formatter.HtmlFormatter;
 
 import java.io.File;
 import java.io.IOException;
 
-import com.zealjagannatha.grammarbuilder.grammar.formatter.FileFormatWriter;
-import com.zealjagannatha.grammarbuilder.grammar.formatter.HtmlFormatter;
 
 @Parsable(prefix="(",suffix=")",resolvers={AdditionExpression.class,SubtractionExpression.class})
 public abstract class Expression {

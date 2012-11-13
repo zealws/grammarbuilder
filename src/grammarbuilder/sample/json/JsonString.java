@@ -19,18 +19,14 @@ package grammarbuilder.sample.json;
 import grammarbuilder.Parsable;
 import grammarbuilder.Symbol;
 
-@Parsable(prefix="'",suffix="'")
+@Parsable(prefix = "'", suffix = "'")
 public class JsonString implements JsonValue {
 
-    @Symbol
-    private String value;
+	@Symbol
+	private String value;
 
-    public JsonString(String value) {
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return "'" + value + "' ";
-    }
+	@Override
+	public String toString() {
+		return "'" + value + "' ";
+	}
 }

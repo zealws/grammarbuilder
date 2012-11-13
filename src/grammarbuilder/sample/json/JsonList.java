@@ -16,25 +16,20 @@
 
 package grammarbuilder.sample.json;
 
-import com.zealjagannatha.grammarbuilder.old.Util;
-
 import grammarbuilder.Parsable;
 import grammarbuilder.Symbol;
+import grammarbuilder.Util;
 
 import java.util.List;
 
-@Parsable(prefix="[",suffix="]")
+@Parsable(prefix = "[", suffix = "]")
 public class JsonList implements JsonValue {
 
-    @Symbol(subtype=JsonValue.class)
-    private List<JsonValue> values;
+	@Symbol(subtype = JsonValue.class)
+	private List<JsonValue> values;
 
-    public JsonList(List<JsonValue> values) {
-        this.values = values;
-    }
-
-    @Override
-    public String toString() {
-        return "[ " + Util.join(values,", ") + "] ";
-    }
+	@Override
+	public String toString() {
+		return "[ " + Util.join(values, ", ") + "] ";
+	}
 }

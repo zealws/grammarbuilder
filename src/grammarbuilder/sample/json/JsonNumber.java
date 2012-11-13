@@ -22,16 +22,12 @@ import grammarbuilder.Symbol;
 @Parsable
 public class JsonNumber implements JsonValue {
 
-    @Symbol
-    private Double value;
+	@Symbol
+	private Double value;
 
-    public JsonNumber(Double value) {
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return value.toString();
-    }
+	@Override
+	public String toString() {
+		return value.toString();
+	}
 
 }

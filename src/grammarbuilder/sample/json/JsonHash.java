@@ -16,44 +16,42 @@
 
 package grammarbuilder.sample.json;
 
-import com.zealjagannatha.grammarbuilder.grammar.formatter.FileFormatWriter;
-import com.zealjagannatha.grammarbuilder.grammar.formatter.HtmlFormatter;
-import com.zealjagannatha.grammarbuilder.grammar.formatter.JsonFormatter;
-import com.zealjagannatha.grammarbuilder.old.Parser;
-import com.zealjagannatha.grammarbuilder.old.ParserTokenizer;
-import com.zealjagannatha.grammarbuilder.old.Util;
+import grammarbuilder.Parsable;
+import grammarbuilder.Symbol;
+import grammarbuilder.TokenStream.Behavior;
+import grammarbuilder.Util;
+import grammarbuilder.parser.Parser;
 
-import grammarbuilder.*;
-
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-@Parsable(prefix="{",suffix="}")
+@Parsable(prefix = "{", suffix = "}")
 public class JsonHash implements JsonValue {
 
-    @Symbol(subtype=JsonPair.class)
-    private List<JsonPair> pairs;
+	@Symbol(subtype = JsonPair.class)
+	private List<JsonPair> pairs;
 
-    public JsonHash(List<JsonPair> pairs) {
-        this.pairs = pairs;
-    }
+	@Override
+	public String toString() {
+		return "{ " + Util.join(pairs, ", ") + "} ";
+	}
 
-    @Override
-    public String toString() {
-        return "{ " + Util.join(pairs,", ") + "} ";
-    }
-
-    public static void main(String[] args) throws IOException {
-        FileFormatWriter.writeFile(new File("/home/zeal/public_html/grammar.htm"), new HtmlFormatter(), JsonHash.class);
-        FileFormatWriter.writeFile(new File("/home/zeal/public_html/grammar.txt"), new JsonFormatter(), JsonHash.class);
-        ParserTokenizer.addSpecialChar('{');
-        ParserTokenizer.addSpecialChar('}');
-        ParserTokenizer.addSpecialChar(':');
-        ParserTokenizer.addSpecialChar('[');
-        ParserTokenizer.addSpecialChar(']');
-        ParserTokenizer.addSpecialChar(',');
-        ParserTokenizer.addSpecialChar('\'');
-        System.out.println(Parser.parse("{ 'a' : 5 }", JsonHash.class));
-    }
+	public static void main(String[] args) throws IOException {
+		// FileFormatWriter.writeFile(new
+		// File("/home/zeal/public_html/grammar.htm"), new HtmlFormatter(),
+		// JsonHash.class);
+		// FileFormatWriter.writeFile(new
+		// File("/home/zeal/public_html/grammar.txt"), new JsonFormatter(),
+		// JsonHash.class);
+		Parser parser = new Parser();
+		parser.specialChar('{', Behavior.Keep);
+		parser.specialChar('}', Behavior.Keep);
+		parser.specialChar(':', Behavior.Keep);
+		parser.specialChar('[', Behavior.Keep);
+		parser.specialChar(']', Behavior.Keep);
+		parser.specialChar(',', Behavior.Keep);
+		parser.specialChar('\'', Behavior.Keep);
+		parser.setRootClass(JsonHash.class);
+		System.out.println(parser.parse("{ 'a' : 5 }"));
+	}
 }

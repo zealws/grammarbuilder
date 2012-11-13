@@ -28,11 +28,6 @@ public class JsonPair {
 	@Symbol
 	private JsonValue value;
 
-	public JsonPair(JsonString name, JsonValue value) {
-		this.name = name;
-		this.value = value;
-	}
-
 	@Override
 	public String toString() {
 		return name + ": " + value + " ";
