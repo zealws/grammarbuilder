@@ -12,6 +12,8 @@ import java.util.List;
 
 public class Parser {
 
+	private static final boolean debug = false;
+
 	// private static Logger logger = Logger.getLogger("Parser");
 
 	private Hashtable<Character, Behavior> specialChars = new Hashtable<Character, Behavior>();
@@ -64,8 +66,7 @@ public class Parser {
 	}
 
 	public <T> T parseClass(ClassAccessor<T> clazz, TokenStream stream) {
-		// System.out.println("Entering type " + clazz.getName() + " \"" +
-		// stream.getBuffer() + "\"");
+		debug("Entering type " + clazz.getName() + " \"" + stream.getBuffer() + "\"");
 		if (!clazz.hasAnnotation(Parsable.class))
 			throw new ParseException("Cannot parse non-buildable class " + clazz.getName());
 		Parsable parsable = clazz.getAnnotation(Parsable.class);
@@ -76,8 +77,7 @@ public class Parser {
 		discardTokens(stream, parsable.ignoreCase(), parsable.prefix());
 
 		for (String fieldName : clazz.getFieldNames()) {
-			// System.out.println("Entering field " + clazz.getName() + "." +
-			// fieldName + " \"" + stream.getBuffer() + "\"");
+			debug("Entering field " + clazz.getName() + "." + fieldName + " \"" + stream.getBuffer() + "\"");
 			Symbol sym = clazz.getFieldAnnotation(fieldName, Symbol.class);
 			if (sym != null) {
 				if (sym.optional()) {
@@ -122,10 +122,16 @@ public class Parser {
 				return parseClass((ClassAccessor<? extends T>) resolverAccessor, stream);
 			} catch (ParseException e) {
 				lastException = e;
+				debug("Restoring stream from \"" + backup.getBuffer() + "\"");
 				stream.restoreFrom(backup);
 			}
 		}
 		throw new ParseException("No appropriate resolvers for " + clazz.getName(), lastException);
+	}
+
+	private void debug(String string) {
+		if (debug)
+			System.out.println(string);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -157,18 +163,23 @@ public class Parser {
 	private <T> List<T> parseList(String padding, ClassAccessor<T> subtype, TokenStream stream, boolean ignoreCase) {
 		@SuppressWarnings("rawtypes")
 		LinkedList results = new LinkedList();
-		while (true) {
-			Object nextItem;
-			if (isPrimitive(subtype))
-				nextItem = parsePrimitive(subtype, null, stream);
-			else
-				nextItem = parseClass(subtype, stream);
-			results.add(nextItem);
-			String next = stream.next();
-			if (next == null || !compare(next, padding, ignoreCase)) {
-				stream.putback(next);
-				break;
+		TokenStream backup = stream.clone();
+		try {
+			while (true) {
+				Object nextItem;
+				if (isPrimitive(subtype))
+					nextItem = parsePrimitive(subtype, null, stream);
+				else
+					nextItem = parseClass(subtype, stream);
+				results.add(nextItem);
+				String next = stream.next();
+				if (next == null || !compare(next, padding, ignoreCase)) {
+					stream.putback(next);
+					break;
+				}
 			}
+		} catch (ParseException e) {
+			stream.restoreFrom(backup);
 		}
 		return results;
 	}

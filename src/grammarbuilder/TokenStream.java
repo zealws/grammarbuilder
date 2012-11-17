@@ -200,7 +200,9 @@ public class TokenStream {
 	}
 
 	public void restoreFrom(TokenStream other) {
-		buffer = other.buffer;
+		this.buffer = new LinkedList<Character>();
+		for (Character c : other.buffer)
+			buffer.addLast(c);
 		currentToken = other.currentToken;
 		putback = other.putback;
 		putbackToken = other.putbackToken;
