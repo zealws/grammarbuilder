@@ -65,7 +65,7 @@ The following primitive types are implicitly `@Parsable`:
 * int
 * double
 * long
-* List (See the section on list parsing.)
+* List (See [Lists](#lists))
 
 ### Lists
 
