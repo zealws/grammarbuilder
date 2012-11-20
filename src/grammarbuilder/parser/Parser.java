@@ -12,7 +12,7 @@ import java.util.List;
 
 public class Parser {
 
-	private static final boolean debug = false;
+	private static final boolean debug = true;
 
 	// private static Logger logger = Logger.getLogger("Parser");
 
@@ -119,14 +119,22 @@ public class Parser {
 				throw new ParseException("Resolver " + resolverAccessor.getName() + " does not extend base class "
 						+ clazz.getName());
 			try {
-				return parseClass((ClassAccessor<? extends T>) resolverAccessor, stream);
+				T result = parseClass((ClassAccessor<? extends T>) resolverAccessor, stream);
+				debug("Abstract class " + clazz.getName() + " resolved to " + resolverAccessor.getName());
+				return result;
 			} catch (ParseException e) {
 				lastException = e;
+				debug(e);
 				debug("Restoring stream from \"" + backup.getBuffer() + "\"");
 				stream.restoreFrom(backup);
 			}
 		}
 		throw new ParseException("No appropriate resolvers for " + clazz.getName(), lastException);
+	}
+
+	private void debug(Exception e) {
+		if (debug)
+			e.printStackTrace();
 	}
 
 	private void debug(String string) {
