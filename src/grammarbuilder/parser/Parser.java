@@ -11,7 +11,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Parser {
-
     private static final boolean debug = false;
 
     // private static Logger logger = Logger.getLogger("Parser");
@@ -70,29 +69,28 @@ public class Parser {
         if (!clazz.hasAnnotation(Parsable.class))
             throw new ParseException("Cannot parse non-buildable class " + clazz.getName());
         Parsable parsable = clazz.getAnnotation(Parsable.class);
-        T object;
+        if (parsable.resolvers().length > 0)
+            return parseResolvers(parsable, clazz, stream);
+        T object = clazz.getInstance();
+
         discardTokens(stream, parsable.ignoreCase(), parsable.prefix());
 
-        if (parsable.resolvers().length > 0)
-            object = parseResolvers(parsable, clazz, stream);
-        else {
-            object = clazz.getInstance();
-            for (String fieldName : clazz.getFieldNames()) {
-                debug("Entering field " + clazz.getName() + "." + fieldName + " \"" + stream.getBuffer() + "\"");
-                Symbol sym = clazz.getFieldAnnotation(fieldName, Symbol.class);
-                if (sym != null) {
-                    if (sym.optional()) {
-                        TokenStream backup = stream.clone();
-                        try {
-                            clazz.setField(object, fieldName, parseField(clazz.getField(fieldName), sym, stream));
-                        } catch (ParseException e) {
-                            stream.restoreFrom(backup);
-                        }
-                    } else
+        for (String fieldName : clazz.getFieldNames()) {
+            debug("Entering field " + clazz.getName() + "." + fieldName + " \"" + stream.getBuffer() + "\"");
+            Symbol sym = clazz.getFieldAnnotation(fieldName, Symbol.class);
+            if (sym != null) {
+                if (sym.optional()) {
+                    TokenStream backup = stream.clone();
+                    try {
                         clazz.setField(object, fieldName, parseField(clazz.getField(fieldName), sym, stream));
-                }
+                    } catch (ParseException e) {
+                        stream.restoreFrom(backup);
+                    }
+                } else
+                    clazz.setField(object, fieldName, parseField(clazz.getField(fieldName), sym, stream));
             }
         }
+
         discardTokens(stream, parsable.ignoreCase(), parsable.suffix());
 
         return object;
@@ -120,14 +118,22 @@ public class Parser {
                 throw new ParseException("Resolver " + resolverAccessor.getName() + " does not extend base class "
                         + clazz.getName());
             try {
-                return parseClass((ClassAccessor<? extends T>) resolverAccessor, stream);
+                T result = parseClass((ClassAccessor<? extends T>) resolverAccessor, stream);
+                debug("Abstract class " + clazz.getName() + " resolved to " + resolverAccessor.getName());
+                return result;
             } catch (ParseException e) {
                 lastException = e;
+                debug(e);
                 debug("Restoring stream from \"" + backup.getBuffer() + "\"");
                 stream.restoreFrom(backup);
             }
         }
         throw new ParseException("No appropriate resolvers for " + clazz.getName(), lastException);
+    }
+
+    private void debug(Exception e) {
+        if (debug)
+            e.printStackTrace();
     }
 
     private void debug(String string) {
