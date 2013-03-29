@@ -6,222 +6,231 @@ import java.util.LinkedList;
 
 public class TokenStream {
 
-	private Deque<Character> buffer = new LinkedList<Character>();
-	private String putbackToken;
-	private Character putback;
-	private Character escapeChar = null;
+    private Deque<Character> buffer = new LinkedList<Character>();
+    private String putbackToken;
+    private Character putback;
+    private Character escapeChar = null;
 
-	private String currentToken;
+    private String currentToken;
 
-	private Hashtable<Character, Behavior> specialChars = new Hashtable<Character, Behavior>();
+    private Hashtable<Character, Behavior> specialChars = new Hashtable<Character, Behavior>();
 
-	public static enum Behavior {
-		// Discard the character, continuing the current token.
-		// Designates nothing.
-		Ignore,
-		// Discard the character, ending the current token.
-		// Designates nothing.
-		Discard,
-		// Keep the character.
-		// Designates a single token.
-		Keep,
-		// Group the character with identical following characters.
-		// Designates a single token.
-		Group,
-		// Terminate the current token, using this character as the last token
-		// in the character.
-		// Designates the last character in a token.
-		Terminate,
-		// End the current token and use this character as the first
-		// character in the next token.
-		// Designates the first character in a token.
-		Threshold,
-		// End the current token. Use this character as the current escape
-		// character and full next token. Future tokens are read in literally,
-		// ignoring all special characters until the character that caused the
-		// escape is given again.
-		// Designates a single token and the start of escaping.
-		Escape
-	}
+    public static enum Behavior {
+        // Default behavior, append this character to the current token.
+        Default,
+        // Discard the character, continuing the current token.
+        // Designates nothing.
+        Ignore,
+        // Discard the character, ending the current token.
+        // Designates nothing.
+        Discard,
+        // End the current token, and treat the current character as a single token.
+        // Designates a single token.
+        Keep,
+        // Group the character with surrounding grouping characters.
+        // The group of characters designates a single token.
+        Group,
+        // Terminate the current token, using this character as the last token
+        // in the character.
+        // Designates the last character in a token.
+        Terminate,
+        // End the current token and use this character as the first
+        // character in the next token.
+        // Designates the first character in a token.
+        Threshold,
+        // End the current token. Use this character as the current escape
+        // character and full next token. Future tokens are read in literally,
+        // ignoring all special characters until the character that caused the
+        // escape is given again.
+        // Designates a single token and the start of escaping.
+        Escape
+    }
 
-	public void addSpecialCharacter(Character c, Behavior b) {
-		specialChars.put(c, b);
-	}
+    private Behavior getBehavior(Character c) {
+        if (specialChars.containsKey(c))
+            return specialChars.get(c);
+        return Behavior.Default;
+    }
 
-	public void feed(String s) {
-		for (byte b : s.getBytes()) {
-			feed((char) b);
-		}
-	}
+    public void addSpecialCharacter(Character c, Behavior b) {
+        specialChars.put(c, b);
+    }
 
-	public void feed(char c) {
-		buffer.addLast(c);
-	}
+    public void feed(String s) {
+        for (byte b : s.getBytes()) {
+            feed((char) b);
+        }
+    }
 
-	public void feed(String... strings) {
-		feed(' ', strings);
-	}
+    public void feed(char c) {
+        buffer.addLast(c);
+    }
 
-	public void feed(char padding, String... strings) {
-		for (String s : strings) {
-			feed(s);
-			feed(padding);
-		}
-	}
+    public void feed(String... strings) {
+        feed(' ', strings);
+    }
 
-	public String next() {
-		StringBuilder token = readNextToken();
-		if (token.length() == 0)
-			currentToken = null;
-		else
-			currentToken = token.toString();
-		return currentToken;
-	}
+    public void feed(char padding, String... strings) {
+        for (String s : strings) {
+            feed(s);
+            feed(padding);
+        }
+    }
 
-	private StringBuilder readNextToken() {
-		if (putbackToken != null) {
-			String temp = putbackToken;
-			putbackToken = null;
-			return new StringBuilder().append(temp);
-		}
-		StringBuilder token = new StringBuilder();
-		boolean finished = false;
-		Character groupChar = null;
-		while (!finished) {
-			Character c = readNextCharacter();
-			if (c == null)
-				finished = true;
-			else {
-				if (groupChar != null) {
-					if (c != groupChar) {
-						putback(c);
-						return token;
-					} else {
-						token.append(c);
-					}
-				} else if (escapeChar != null) {
-					if (c.equals(escapeChar)) {
-						if (token.length() != 0) {
-							putback(c);
-							return token;
-						} else {
-							escapeChar = null;
-							return token.append(c);
-						}
-					} else
-						token.append(c);
-				} else if (specialChars.containsKey(c)) {
-					switch (specialChars.get(c)) {
-					case Keep:
-						if (token.length() == 0) {
-							return token.append(c);
-						} else {
-							putback(c);
-							return token;
-						}
-					case Discard:
-						if (token.length() != 0) {
-							return token;
-						}
-						break;
-					case Group:
-						if (token.length() == 0) {
-							groupChar = c;
-							token.append(c);
-						} else {
-							putback(c);
-							return token;
-						}
-						break;
-					case Terminate:
-						token.append(c);
-						return token;
-					case Threshold:
-						if (token.length() == 0)
-							token.append(c);
-						else {
-							putback(c);
-							return token;
-						}
-						break;
-					case Ignore:
-						break;
-					case Escape:
-						if (token.length() == 0) {
-							escapeChar = c;
-							return token.append(c);
-						} else {
-							putback(c);
-							return token;
-						}
-					}
-				} else {
-					token.append(c);
-				}
-			}
-		}
-		return token;
-	}
+    public String next() {
+        StringBuilder token = readNextToken();
+        if (token.length() == 0)
+            currentToken = null;
+        else
+            currentToken = token.toString();
+        return currentToken;
+    }
 
-	private Character readNextCharacter() {
-		if (putback == null && buffer.isEmpty())
-			return null;
-		else if (putback == null)
-			return buffer.removeFirst();
-		else {
-			Character temp = putback;
-			putback = null;
-			return temp;
-		}
-	}
+    private StringBuilder readNextToken() {
+        if (putbackToken != null) {
+            String temp = putbackToken;
+            putbackToken = null;
+            return new StringBuilder().append(temp);
+        }
+        StringBuilder token = new StringBuilder();
+        boolean finished = false;
+        boolean grouped = false;
+        while (!finished) {
+            Character c = readNextCharacter();
+            if (c == null)
+                finished = true;
+            else {
+                if (grouped) {
+                    if (getBehavior(c) != Behavior.Group) {
+                        putback(c);
+                        return token;
+                    } else {
+                        token.append(c);
+                    }
+                } else if (escapeChar != null) {
+                    if (c.equals(escapeChar)) {
+                        if (token.length() != 0) {
+                            putback(c);
+                            return token;
+                        } else {
+                            escapeChar = null;
+                            return token.append(c);
+                        }
+                    } else
+                        token.append(c);
+                } else {
+                    switch (getBehavior(c)) {
+                    case Keep:
+                        if (token.length() == 0) {
+                            return token.append(c);
+                        } else {
+                            putback(c);
+                            return token;
+                        }
+                    case Discard:
+                        if (token.length() != 0) {
+                            return token;
+                        }
+                        break;
+                    case Group:
+                        if (token.length() == 0) {
+                            grouped = true;
+                            token.append(c);
+                        } else {
+                            putback(c);
+                            return token;
+                        }
+                        break;
+                    case Terminate:
+                        token.append(c);
+                        return token;
+                    case Threshold:
+                        if (token.length() == 0)
+                            token.append(c);
+                        else {
+                            putback(c);
+                            return token;
+                        }
+                        break;
+                    case Ignore:
+                        break;
+                    case Escape:
+                        if (token.length() == 0) {
+                            escapeChar = c;
+                            return token.append(c);
+                        } else {
+                            putback(c);
+                            return token;
+                        }
+                    case Default:
+                        token.append(c);
+                        break;
+                    }
+                }
+            }
+        }
+        return token;
+    }
 
-	private void putback(Character c) {
-		putback = c;
-	}
+    private Character readNextCharacter() {
+        if (putback == null && buffer.isEmpty())
+            return null;
+        else if (putback == null)
+            return buffer.removeFirst();
+        else {
+            Character temp = putback;
+            putback = null;
+            return temp;
+        }
+    }
 
-	public void putback(String token) {
-		if (putbackToken == null)
-			putbackToken = token;
-		else
-			throw new RuntimeException("Conflict with existing put-back token: " + putbackToken);
-	}
+    private void putback(Character c) {
+        putback = c;
+    }
 
-	@Override
-	public TokenStream clone() {
-		TokenStream other = new TokenStream();
-		for (Character c : buffer) {
-			other.buffer.addLast(c);
-		}
-		other.currentToken = currentToken;
-		other.putback = putback;
-		other.putbackToken = putbackToken;
-		other.specialChars = specialChars;
-		return other;
-	}
+    public void putback(String token) {
+        if (putbackToken == null)
+            putbackToken = token;
+        else
+            throw new RuntimeException("Conflict with existing put-back token: " + putbackToken);
+    }
 
-	public void restoreFrom(TokenStream other) {
-		this.buffer = new LinkedList<Character>();
-		for (Character c : other.buffer)
-			buffer.addLast(c);
-		currentToken = other.currentToken;
-		putback = other.putback;
-		putbackToken = other.putbackToken;
-	}
+    @Override
+    public TokenStream clone() {
+        TokenStream other = new TokenStream();
+        for (Character c : buffer) {
+            other.buffer.addLast(c);
+        }
+        other.currentToken = currentToken;
+        other.putback = putback;
+        other.putbackToken = putbackToken;
+        other.specialChars = specialChars;
+        return other;
+    }
 
-	public String getCurrentToken() {
-		return currentToken;
-	}
+    public void restoreFrom(TokenStream other) {
+        this.buffer = new LinkedList<Character>();
+        for (Character c : other.buffer)
+            buffer.addLast(c);
+        currentToken = other.currentToken;
+        putback = other.putback;
+        putbackToken = other.putbackToken;
+    }
 
-	public String getBuffer() {
-		StringBuilder b = new StringBuilder();
-		for (Character c : buffer) {
-			if (c == '\n')
-				b.append("\\n");
-			else if (c == '\t')
-				b.append("\\t");
-			else
-				b.append(c);
-		}
-		return b.toString();
-	}
+    public String getCurrentToken() {
+        return currentToken;
+    }
+
+    public String getBuffer() {
+        StringBuilder b = new StringBuilder();
+        for (Character c : buffer) {
+            if (c == '\n')
+                b.append("\\n");
+            else if (c == '\t')
+                b.append("\\t");
+            else
+                b.append(c);
+        }
+        return b.toString();
+    }
 }
